@@ -2,7 +2,7 @@
 # global GNOME tweak (optional): slimmer title bars on X11/XWayland windows, then restart the frame helper
 set -e
 CSS="$HOME/.config/gtk-4.0/gtk.css"
-SRC="$HOME/3dsmax-wine/scripts/desktop/gtk4-slim-titlebars.css"
+SRC="$(dirname "$(readlink -f "$0")")/gtk4-slim-titlebars.css"
 mkdir -p "$(dirname "$CSS")"
 if ! grep -q 'mutter-x11-frames' "$CSS" 2>/dev/null; then
     { [ -s "$CSS" ] && echo; cat "$SRC"; } >> "$CSS"

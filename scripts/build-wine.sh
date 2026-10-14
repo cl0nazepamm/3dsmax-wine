@@ -1,11 +1,11 @@
 #!/bin/bash
 # Apply patches/wine-11.0/*.patch to a wine-11.0 checkout, build the patched modules and deploy them.
 #   WINESRC  wine source checkout (default ~/src/wine-11.0, cloned from gitlab.winehq.org if missing)
+# Needs flex, bison and mingw64-toolchain (USE=mingw on wine-vanilla pulls them in, but depclean drops them).
 # The build dir is configured with Gentoo's install paths on purpose: ntdll.so bakes in absolute
 # BINDIR/DATADIR, and with the default /usr/local prefix it can't find l_intl.nls and segfaults.
 set -e
-REPO="$HOME/3dsmax-wine"
-WINESRC="${WINESRC:-$HOME/src/wine-11.0}"
+source "$(dirname "$(readlink -f "$0")")/env.sh"
 P=/usr/lib/wine-vanilla-11.0
 D=/usr/share/wine-vanilla-11.0
 
@@ -13,6 +13,8 @@ if [ ! -d "$WINESRC/.git" ]; then
     git clone --branch wine-11.0 --depth 1 https://gitlab.winehq.org/wine/wine.git "$WINESRC"
 fi
 cd "$WINESRC"
+# git am records a committer; don't fail on machines without a git identity
+git config user.email >/dev/null || export GIT_COMMITTER_NAME=3dsmax-wine GIT_COMMITTER_EMAIL=3dsmax-wine@localhost
 if ! git rev-parse -q --verify 3dsmax >/dev/null; then  # applies everything in patches/wine-11.0, incl. the staging dcomp backport
     git checkout -b 3dsmax wine-11.0
     git am "$REPO"/patches/wine-11.0/*.patch

@@ -1,13 +1,14 @@
 #!/bin/bash
 # register adsk-url-handler.sh as the desktop handler for Identity Manager's callback schemes
 set -e
+source "$(dirname "$(readlink -f "$0")")/env.sh"
 APPS="$HOME/.local/share/applications"
 mkdir -p "$APPS"
 cat > "$APPS/wine-3dsmax-adskidmgr.desktop" <<DESKTOP
 [Desktop Entry]
 Type=Application
 Name=Autodesk Identity Manager (Wine 3ds Max prefix)
-Exec=$HOME/3dsmax-wine/scripts/adsk-url-handler.sh %u
+Exec="$REPO/scripts/adsk-url-handler.sh" %u
 MimeType=x-scheme-handler/adskidmgr;x-scheme-handler/adsk.idmgr;
 NoDisplay=true
 Terminal=false

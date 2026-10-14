@@ -2,8 +2,8 @@
 # deploy rebuilt wine modules from build64 into the patched wine tree
 # usage: deploy.sh dlls/ntdll/ntdll.so dlls/wintrust/x86_64-windows/wintrust.dll ...
 set -e
-source "$HOME/3dsmax-wine/scripts/env.sh"
-B="$HOME/src/wine-11.0/build64"
+source "$(dirname "$(readlink -f "$0")")/env.sh"
+B="$WINESRC/build64"
 for f in "$@"; do
     base=$(basename "$f")
     case "$f" in

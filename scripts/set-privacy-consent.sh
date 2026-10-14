@@ -3,7 +3,7 @@
 # doesn't come up: submitting that dialog under wine ends 3ds Max with exit code 244, the answer is
 # never saved (UserConsent/<userId>.json keeps optIn=null, userActionRequired=true) and it asks again.
 #   set-privacy-consent.sh [improve=0|1] [offers=0|1]     (default: both off, i.e. all boxes unchecked)
-source "$HOME/3dsmax-wine/scripts/env.sh"
+source "$(dirname "$(readlink -f "$0")")/env.sh"
 improve=${1:-0}; offers=${2:-0}
 python3 -I - "$WINEPREFIX/drive_c/users/$USER/AppData/Roaming/Autodesk/ADPSDK/UserConsent" "$improve" "$offers" <<'PY'
 import json, os, sys, time

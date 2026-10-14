@@ -43,8 +43,13 @@ Modules built from these and layered onto the private Wine tree are listed in [`
 
 ## Reproducing
 
-This assumes Gentoo with `app-emulation/wine-vanilla-11.0` (USE `wow64 vulkan opengl X wayland mingw`), winetricks, mingw-w64, a Vulkan driver (Mesa ANV here),
-and the 3ds Max 2027 installer media unpacked to `~/3dsmax-setup`.
+This assumes Gentoo with `app-emulation/wine-vanilla-11.0` (USE `wow64 vulkan opengl X wayland mingw`), a Vulkan driver (Mesa ANV here), and:
+
+- build tools: `dev-vcs/git`, `sys-devel/flex`, `sys-devel/bison`, `dev-util/mingw64-toolchain` (USE=mingw pulls the last three in to build wine-vanilla, but `emerge --depclean` removes them again)
+- `app-emulation/winetricks`, `net-misc/curl`, `x11-misc/xdg-utils`, python 3
+- the 3ds Max 2027 installer media unpacked to `~/3dsmax-setup` (or set `MAXSRC`)
+
+The repo can be cloned anywhere; the scripts find it from their own location. The prefix is `~/.wine-3dsmax`, the private Wine tree goes to `~/opt/wine-11.0-patched`, and the Wine source to `~/src/wine-11.0` (or set `WINESRC`).
 
 ```sh
 scripts/make-wine-tree.sh            # private copy of wine-vanilla-11.0 in ~/opt, system wine untouched
@@ -56,7 +61,7 @@ scripts/install-max-msi.sh           # core 3dsMax.msi without ODIS
 scripts/install-identity-manager.sh  # ODIS + Identity Manager 1.12.0.7 from Autodesk's CDN + adskidmgr:// handler
 scripts/set-named-user.sh            # named-user licensing (skips the WebView2 license-type page)
 scripts/setup-webview2.sh            # WebView2 flags + per-app d3d overrides
-scripts/install-launcher.sh          # one "3ds Max 2027" desktop launcher, removes the installer's shortcuts
+scripts/install-launcher.sh          # one "3ds Max 2027" launcher with icon and .max file type, removes the installer's shortcuts
 ```
 
 Then start **3ds Max 2027** from the app grid, or run `scripts/run-3dsmax.sh [file.max]`. On first launch Identity Manager opens the Autodesk sign-in page in your browser. After you log in, the browser offers to open an `adskidmgr://` link; allow it. Logs are written to `logs/`.
