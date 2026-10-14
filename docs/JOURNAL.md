@@ -89,3 +89,10 @@ The licensing agent (`AdskLicensingAgent.exe`) asks "how do you want to license"
 
 - **Symptom:** GNOME showed "Brazilian Portuguese is not responding" spam. The user had started 3ds Max from the installer's menu entries. Those use the **system** `wine` (unpatched: splash back to `/2027 - 64bit`), there's one per language, and all of them claim `StartupWMClass=3dsmax.exe`. GNOME named the window after one of them and pinged a hung window.
 - **Fix:** `scripts/install-launcher.sh` creates a single `3ds Max 2027` entry running `run-3dsmax.sh` (also the `.max` handler), removes the installer's entries, and `env.sh` disables winemenubuilder so they aren't regenerated. Launching from the app grid takes about 30 s to the main window. The patched ntdll is confirmed loaded.
+
+### Title bar
+
+- **Request:** GNOME's title bar on the 3ds Max window is too tall.
+- **Tried:** per-app `HKCU\Software\Wine\AppDefaults\3dsmax.exe\X11 Driver\Decorated=N` (read by `win32u/sysparams.c` in Wine 11). Wine then draws the caption itself, but with no msstyles theme it's the classic Windows 95 look. Reverted.
+- **Fix:** since GNOME 45, the frames of X11 windows are drawn by `mutter-x11-frames`, a GTK4 client whose header bar carries `titlebar default-decoration`, the same classes GTK4 gives plain title bars. `scripts/desktop/gtk4-slim-titlebars.css` goes into `~/.config/gtk-4.0/gtk.css`. This is optional and global to X11 windows.
+- **Gotcha:** restarting the helper with SIGTERM leaves X11 windows without frames. Mutter's `on_frames_client_died` doesn't respawn it after SIGTERM/SIGKILL. Use SIGINT, or start `/usr/libexec/mutter-x11-frames` with `DISPLAY` set; mutter matches frames only through `_MUTTER_FRAME_FOR`.
