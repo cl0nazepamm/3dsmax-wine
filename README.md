@@ -99,3 +99,7 @@ logs/ snapshots/ downloads/ extract/   local only (gitignored)
 - **`Current?` directories are normal.** Wine 11 stores junctions as `name?` plus the `user.WINEREPARSE` xattr.
 - **msiexec quoting.** Wine turns `"PROP=C:\a b"` into `"PROP="C:\a b""` (exit 1639), so the MSI is run from a `.bat`.
 - **DLL overrides.** `*name` keys beat plain `name` keys, so per-app overrides must also use the `*` form.
+
+## License
+
+Scripts, tools and docs: [MIT](LICENSE). The Wine patches in `patches/` modify Wine and stay under Wine's license, LGPL-2.1-or-later; the dcomp series keeps its original authors.
