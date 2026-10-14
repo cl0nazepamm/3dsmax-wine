@@ -2,8 +2,12 @@
 
 Autodesk 3ds Max 2027 (29.2.0.20588) runs on Linux under a patched Wine 11.0. Sign-in uses a normal Autodesk account. The Nitrous viewport renders through DXVK.
 
-I got here by hill-climbing: launch, find out exactly why it stops, fix the cause (in Wine when Wine is at fault), repeat.
-Licensing goes through the regular Autodesk sign-in. Nothing here touches or bypasses Autodesk licensing.
+Claude was used to hill-climbing the installer steps: launch, find out exactly why it stops, fix the cause (in Wine when Wine is at fault), repeat.
+Licensing goes through the regular Autodesk sign-in. 
+
+Nothing here touches or bypasses Autodesk licensing.
+
+![3ds Max 2027 with a teapot in the Nitrous viewport, Gentoo, GNOME 49 on Wayland, i5-10210U with UHD 620](docs/screenshot.png)
 
 ## Status
 
@@ -87,8 +91,9 @@ logs/ snapshots/ downloads/ extract/   local only (gitignored)
 - **GNOME title bar too tall?** `scripts/desktop/install-slim-titlebars.sh` slims title bars of X11 windows (all of them, not just 3ds Max) via `~/.config/gtk-4.0/gtk.css`. Wine's own caption (`Decorated=N`) was tried and looks like Windows 95.
 - **Never launch through the system `wine`.** The installer's own shortcuts use the unpatched system Wine. `install-launcher.sh` removes them, and `env.sh` disables winemenubuilder so they don't come back.
 - `RegisterInventorServerHost` (Inventor import) wasn't registered by the MSI under Wine. To fix it by hand, run `MaxInventorServerHost.exe /regserver`.
+- Edge Selection is not visible (Editable Poly)
 
-## Gotchas found along the way
+## Installer workarounds
 
 - **The build dir must use Gentoo's install paths.** `ntdll.so` bakes in `DATADIR`; with `/usr/local` it can't load `l_intl.nls` and segfaults in `ntdll_towupper`.
 - **`Current?` directories are normal.** Wine 11 stores junctions as `name?` plus the `user.WINEREPARSE` xattr.
