@@ -2,8 +2,8 @@
 
 Autodesk 3ds Max 2027 (29.2.0.20588) runs on Linux under a patched Wine 11.0. Sign-in uses a normal Autodesk account. The Nitrous viewport renders through DXVK.
 
-Claude was used to hill-climbing the installer steps: launch, find out exactly why it stops, fix the cause (in Wine when Wine is at fault), repeat.
-Licensing goes through the regular Autodesk sign-in. 
+Claude was used to get through the Autodesk installer from start to end: launch, find out exactly why it stops, fix the cause (in Wine when Wine is at fault), repeat.
+Licensing goes through the regular Autodesk sign-in.
 
 Nothing here touches or bypasses Autodesk licensing.
 
