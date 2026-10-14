@@ -78,6 +78,7 @@ logs/ snapshots/ downloads/ extract/   local only (gitignored)
 
 - **Embedded WebView2 renders blank or black.** The browser processes draw into child windows whose top-level belongs to another process (the Autodesk host app). Wine 11 can't composite cross-process child windows: GDI and offscreen GL/Vulkan blits get overwritten by the owner's surface. Login avoids WebView2 entirely by using the system browser. Proper fix: cross-process client surfaces in win32u/winex11 (not done).
 - **GNOME "is not responding" dialogs.** Mutter pings windows. If 3ds Max's main thread is busy, as in long loads, nobody answers. Raising the timeout helps: `gsettings set org.gnome.mutter check-alive-timeout 30000`.
+- **GNOME title bar too tall?** `scripts/desktop/install-slim-titlebars.sh` slims title bars of X11 windows (all of them, not just 3ds Max) via `~/.config/gtk-4.0/gtk.css`. Wine's own caption (`Decorated=N`) was tried and looks like Windows 95.
 - **Never launch through the system `wine`.** The installer's own shortcuts use the unpatched system Wine. `install-launcher.sh` removes them, and `env.sh` disables winemenubuilder so they don't come back.
 - `RegisterInventorServerHost` (Inventor import) wasn't registered by the MSI under Wine. To fix it by hand, run `MaxInventorServerHost.exe /regserver`.
 

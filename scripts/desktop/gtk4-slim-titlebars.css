@@ -1,0 +1,19 @@
+/* Slim GNOME title bars for X11 windows (wine apps such as 3ds Max).
+ * Since GNOME 45 their frames are drawn by mutter-x11-frames, a GTK4 client, whose header bar has
+ * the same "titlebar default-decoration" classes GTK4 gives plain (non-custom) title bars, so
+ * libadwaita/CSD header bars are not affected. */
+headerbar.titlebar.default-decoration {
+  min-height: 0;
+  padding: 1px 4px;
+}
+
+headerbar.titlebar.default-decoration windowcontrols > button {
+  min-height: 18px;
+  min-width: 18px;
+  padding: 0;
+  margin: 0 1px;
+}
+
+headerbar.titlebar.default-decoration .title {
+  font-size: 9pt;
+}
