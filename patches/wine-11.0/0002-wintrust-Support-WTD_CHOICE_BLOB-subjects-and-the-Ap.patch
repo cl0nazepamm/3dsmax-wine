@@ -1,0 +1,188 @@
+From 254952a779e22e1c4f7f14be93da4280b811fbe5 Mon Sep 17 00:00:00 2001
+From: cl0nazepamm <46329307+cl0nazepamm@users.noreply.github.com>
+Date: Wed, 14 Oct 2026 05:21:28 +0300
+Subject: [PATCH 2/3] wintrust: Support WTD_CHOICE_BLOB subjects and the AppX
+ P7X SIP.
+
+SoftpubLoadMessage only handled file and catalog subjects. Autodesk's
+installers verify MSIX/AppX signatures by passing AppxSignature.p7x as an
+in-memory blob (WTD_CHOICE_BLOB) with the AppX P7X SIP GUID
+{5598CFF1-68DB-4340-B57F-1CACF88C9A51}. Add a minimal blob loader and a
+SIP that strips the "PKCX" magic and returns the PKCS #7 message.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ dlls/wintrust/crypt.c    | 47 ++++++++++++++++++++++++++++++++++
+ dlls/wintrust/register.c |  3 +++
+ dlls/wintrust/softpub.c  | 55 ++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 105 insertions(+)
+
+diff --git a/dlls/wintrust/crypt.c b/dlls/wintrust/crypt.c
+index ad6f264..4885b2c 100644
+--- a/dlls/wintrust/crypt.c
++++ b/dlls/wintrust/crypt.c
+@@ -1611,6 +1611,48 @@ static BOOL WINTRUST_GetSignedMsgFromCatFile(SIP_SUBJECTINFO *pSubjectInfo,
+     return ret;
+ }
+ 
++/* AppxSignature.p7x: a "PKCX" magic followed by a DER encoded PKCS #7 message */
++static BOOL WINTRUST_GetSignedMsgFromP7xBlob(SIP_SUBJECTINFO *pSubjectInfo,
++ DWORD *pdwEncodingType, DWORD dwIndex, DWORD *pcbSignedDataMsg,
++ BYTE *pbSignedDataMsg)
++{
++    static const DWORD p7x_magic = 0x58434b50;
++    MS_ADDINFO_BLOB *blob;
++    DWORD len;
++
++    TRACE("(%p %p %ld %p %p)\n", pSubjectInfo, pdwEncodingType, dwIndex,
++          pcbSignedDataMsg, pbSignedDataMsg);
++
++    if (pSubjectInfo->dwUnionChoice != MSSIP_ADDINFO_BLOB || !(blob = pSubjectInfo->psBlob) ||
++        !blob->pbMemObject || blob->cbMemObject <= sizeof(p7x_magic) ||
++        memcmp(blob->pbMemObject, &p7x_magic, sizeof(p7x_magic)))
++    {
++        FIXME("unsupported AppX subject\n");
++        SetLastError(TRUST_E_SUBJECT_FORM_UNKNOWN);
++        return FALSE;
++    }
++    if (dwIndex)
++    {
++        SetLastError(TRUST_E_NOSIGNATURE);
++        return FALSE;
++    }
++
++    len = blob->cbMemObject - sizeof(p7x_magic);
++    if (pbSignedDataMsg)
++    {
++        if (*pcbSignedDataMsg < len)
++        {
++            *pcbSignedDataMsg = len;
++            SetLastError(ERROR_INSUFFICIENT_BUFFER);
++            return FALSE;
++        }
++        memcpy(pbSignedDataMsg, blob->pbMemObject + sizeof(p7x_magic), len);
++    }
++    *pcbSignedDataMsg = len;
++    *pdwEncodingType = X509_ASN_ENCODING | PKCS_7_ASN_ENCODING;
++    return TRUE;
++}
++
+ /* GUIDs used by CryptSIPGetSignedDataMsg and CryptSIPPutSignedDataMsg */
+ static const GUID unknown = { 0xC689AAB8, 0x8E78, 0x11D0, { 0x8C,0x47,
+     0x00,0xC0,0x4F,0xC2,0x95,0xEE } };
+@@ -1618,6 +1660,8 @@ static const GUID cabGUID = { 0xC689AABA, 0x8E78, 0x11D0, { 0x8C,0x47,
+     0x00,0xC0,0x4F,0xC2,0x95,0xEE } };
+ static const GUID catGUID = { 0xDE351A43, 0x8E59, 0x11D0, { 0x8C,0x47,
+      0x00,0xC0,0x4F,0xC2,0x95,0xEE }};
++static const GUID appxP7xGUID = { 0x5598CFF1, 0x68DB, 0x4340, { 0xB5,0x7F,
++     0x1C,0xAC,0xF8,0x8C,0x9A,0x51 }};
+ 
+ /***********************************************************************
+  *      CryptSIPGetSignedDataMsg  (WINTRUST.@)
+@@ -1645,6 +1689,9 @@ BOOL WINAPI CryptSIPGetSignedDataMsg(SIP_SUBJECTINFO* pSubjectInfo, DWORD* pdwEn
+     else if (!memcmp(pSubjectInfo->pgSubjectType, &catGUID, sizeof(catGUID)))
+         ret = WINTRUST_GetSignedMsgFromCatFile(pSubjectInfo, pdwEncodingType,
+          dwIndex, pcbSignedDataMsg, pbSignedDataMsg);
++    else if (!memcmp(pSubjectInfo->pgSubjectType, &appxP7xGUID, sizeof(appxP7xGUID)))
++        ret = WINTRUST_GetSignedMsgFromP7xBlob(pSubjectInfo, pdwEncodingType,
++         dwIndex, pcbSignedDataMsg, pbSignedDataMsg);
+     else
+     {
+         FIXME("unimplemented for subject type %s\n",
+diff --git a/dlls/wintrust/register.c b/dlls/wintrust/register.c
+index 49b8ce0..e7639db 100644
+--- a/dlls/wintrust/register.c
++++ b/dlls/wintrust/register.c
+@@ -1011,6 +1011,7 @@ HRESULT WINAPI DllRegisterServer(void)
+     static GUID Unknown4 = { 0xC689AAB9, 0x8E78, 0x11D0, { 0x8C,0x47,0x00,0xC0,0x4F,0xC2,0x95,0xEE }};
+     static GUID Unknown5 = { 0xDE351A43, 0x8E59, 0x11D0, { 0x8C,0x47,0x00,0xC0,0x4F,0xC2,0x95,0xEE }};
+     static GUID Unknown6 = { 0x9BA61D3F, 0xE73A, 0x11D0, { 0x8C,0xD2,0x00,0xC0,0x4F,0xC2,0x95,0xEE }};
++    static GUID AppxP7x = { 0x5598CFF1, 0x68DB, 0x4340, { 0xB5,0x7F,0x1C,0xAC,0xF8,0x8C,0x9A,0x51 }};
+     static WCHAR MagicNumber2[] = {'M','S','C','F', 0};
+     static WCHAR MagicNumber3[] = {'0','x','0','0','0','0','4','5','5','0', 0};
+     static WCHAR CafeBabe[] = {'0','x','c','a','f','e','b','a','b','e', 0};
+@@ -1126,6 +1127,8 @@ add_trust_providers:
+         SIPAddProviderRes = S_FALSE;
+     if (!WINTRUST_SIPPAddProvider(&Unknown6, CafeBabe))
+         SIPAddProviderRes = S_FALSE;
++    if (!WINTRUST_SIPPAddProvider(&AppxP7x, NULL))
++        SIPAddProviderRes = S_FALSE;
+ 
+     /* Native does a CryptSIPRemoveProvider here for {941C2937-1292-11D1-85BE-00C04FC295EE}.
+      * This SIP Provider is however not found on up-to-date window install and native will
+diff --git a/dlls/wintrust/softpub.c b/dlls/wintrust/softpub.c
+index 609d240..5de4991 100644
+--- a/dlls/wintrust/softpub.c
++++ b/dlls/wintrust/softpub.c
+@@ -556,6 +556,58 @@ error:
+     return err;
+ }
+ 
++static DWORD SOFTPUB_LoadBlobMessage(CRYPT_PROVIDER_DATA *data)
++{
++    WINTRUST_BLOB_INFO *blob = data->pWintrustData->pBlob;
++    SIP_SUBJECTINFO *subject;
++    MS_ADDINFO_BLOB *info;
++    DWORD err, size = 0;
++    BYTE *buf;
++
++    if (!blob || !WVT_IS_CBSTRUCT_GT_MEMBEROFFSET(WINTRUST_BLOB_INFO, blob->cbStruct, pbMemObject) ||
++        !blob->cbMemObject || !blob->pbMemObject)
++        return ERROR_INVALID_PARAMETER;
++
++    data->pPDSip->gSubject = blob->gSubject;
++    if ((err = SOFTPUB_GetSIP(data))) return err;
++
++    if (!(subject = data->psPfns->pfnAlloc(sizeof(*subject))) ||
++        !(info = data->psPfns->pfnAlloc(sizeof(*info))))
++        return ERROR_OUTOFMEMORY;
++    data->pPDSip->psSipSubjectInfo = subject;
++
++    info->cbStruct = sizeof(*info);
++    info->cbMemObject = blob->cbMemObject;
++    info->pbMemObject = blob->pbMemObject;
++    subject->cbSize = sizeof(*subject);
++    subject->pgSubjectType = &data->pPDSip->gSubject;
++    subject->hFile = INVALID_HANDLE_VALUE;
++    subject->pwsFileName = blob->pcwszDisplayName;
++    subject->hProv = data->hProv;
++    subject->dwUnionChoice = MSSIP_ADDINFO_BLOB;
++    subject->psBlob = info;
++
++    if (!data->pPDSip->pSip->pfGet(subject, &data->dwEncoding, 0, &size, NULL))
++        return TRUST_E_NOSIGNATURE;
++    if (!(buf = data->psPfns->pfnAlloc(size)))
++        return ERROR_OUTOFMEMORY;
++    if (data->pPDSip->pSip->pfGet(subject, &data->dwEncoding, 0, &size, buf))
++    {
++        if ((data->hMsg = CryptMsgOpenToDecode(data->dwEncoding, 0, 0, data->hProv, NULL, NULL)))
++        {
++            if (!CryptMsgUpdate(data->hMsg, buf, size, TRUE)) err = GetLastError();
++        }
++        else err = GetLastError();
++    }
++    else err = GetLastError();
++    data->psPfns->pfnFree(buf);
++    if (err) return err;
++
++    if ((err = SOFTPUB_CreateStoreFromMessage(data))) return err;
++    /* the blob holds only the signature, so there is no object to hash here */
++    return SOFTPUB_DecodeInnerContent(data);
++}
++
+ static DWORD SOFTPUB_LoadCatalogMessage(CRYPT_PROVIDER_DATA *data)
+ {
+     DWORD err;
+@@ -615,6 +667,9 @@ HRESULT WINAPI SoftpubLoadMessage(CRYPT_PROVIDER_DATA *data)
+     case WTD_CHOICE_CATALOG:
+         err = SOFTPUB_LoadCatalogMessage(data);
+         break;
++    case WTD_CHOICE_BLOB:
++        err = SOFTPUB_LoadBlobMessage(data);
++        break;
+     default:
+         FIXME("unimplemented for %ld\n", data->pWintrustData->dwUnionChoice);
+         err = ERROR_INVALID_PARAMETER;
+-- 
+2.55.0
+

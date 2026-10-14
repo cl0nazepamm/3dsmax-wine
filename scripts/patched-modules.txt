@@ -1,0 +1,4 @@
+# build64-relative paths of wine modules we patch; built by build-wine.sh, installed by deploy.sh
+dlls/ntdll/ntdll.so
+dlls/ntdll/x86_64-windows/ntdll.dll
+dlls/wintrust/x86_64-windows/wintrust.dll
