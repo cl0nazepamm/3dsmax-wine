@@ -1,0 +1,9 @@
+REGEDIT4
+
+; WebView2's GPU process needs IDXGIFactory2::CreateSwapChainForComposition, which DXVK doesn't
+; implement; use wine's own dxgi/d3d11 (wined3d + staging dcomp hack) just for msedgewebview2.exe.
+[HKEY_CURRENT_USER\Software\Wine\AppDefaults\msedgewebview2.exe\DllOverrides]
+"*dxgi"="builtin"
+"*d3d11"="builtin"
+"*d3d10core"="builtin"
+"*d3d9"="builtin"

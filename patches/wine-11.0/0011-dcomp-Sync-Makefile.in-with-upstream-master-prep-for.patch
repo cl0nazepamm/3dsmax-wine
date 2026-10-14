@@ -1,0 +1,28 @@
+From 9bb6bdb4a212224e78f54d7577128b78ab9928eb Mon Sep 17 00:00:00 2001
+From: cl0nazepamm <46329307+cl0nazepamm@users.noreply.github.com>
+Date: Wed, 14 Oct 2026 05:58:48 +0300
+Subject: [PATCH 11/73] dcomp: Sync Makefile.in with upstream master (prep for
+ wine-staging dcomp series).
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ dlls/dcomp/Makefile.in | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/dlls/dcomp/Makefile.in b/dlls/dcomp/Makefile.in
+index d48b901..3c14125 100644
+--- a/dlls/dcomp/Makefile.in
++++ b/dlls/dcomp/Makefile.in
+@@ -1,7 +1,6 @@
+ MODULE    = dcomp.dll
+ 
+-EXTRADLLFLAGS = -Wb,--prefer-native
++VER_PRODUCTVERSION = 10,0,14393,0
+ 
+ SOURCES = \
+-	device.c \
+-	version.rc
++	device.c
+-- 
+2.55.0
+

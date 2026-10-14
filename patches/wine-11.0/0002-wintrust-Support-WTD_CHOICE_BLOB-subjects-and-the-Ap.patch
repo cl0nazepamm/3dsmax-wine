@@ -1,7 +1,7 @@
 From 254952a779e22e1c4f7f14be93da4280b811fbe5 Mon Sep 17 00:00:00 2001
 From: cl0nazepamm <46329307+cl0nazepamm@users.noreply.github.com>
 Date: Wed, 14 Oct 2026 05:21:28 +0300
-Subject: [PATCH 2/3] wintrust: Support WTD_CHOICE_BLOB subjects and the AppX
+Subject: [PATCH 02/73] wintrust: Support WTD_CHOICE_BLOB subjects and the AppX
  P7X SIP.
 
 SoftpubLoadMessage only handled file and catalog subjects. Autodesk's

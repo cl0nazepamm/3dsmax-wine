@@ -1,3 +1,5 @@
 logs/
 snapshots/
 tools/*.exe
+downloads/
+extract/

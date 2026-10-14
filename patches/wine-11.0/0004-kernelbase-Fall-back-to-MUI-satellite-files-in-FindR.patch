@@ -1,0 +1,315 @@
+From 6201ac701a5e1be5e2b8765608a95dceb59a523f Mon Sep 17 00:00:00 2001
+From: cl0nazepamm <46329307+cl0nazepamm@users.noreply.github.com>
+Date: Wed, 14 Oct 2026 05:47:10 +0300
+Subject: [PATCH 04/73] kernelbase: Fall back to MUI satellite files in
+ FindResourceExW.
+
+Language-neutral (LN) modules carry only non-localizable resources plus a
+"MUI" configuration resource; their string tables, dialogs and menus live in
+<module dir>\<language>\<module name>.mui. Windows transparently looks there
+when a resource is missing from the LN module. Wine only searched the module
+itself, so LoadString() etc. returned empty strings for every LN module.
+
+3ds Max 2027 ships nearly all of its UI resources this way (res10.dll ->
+en-US\res10.dll.mui holds the product identity strings read at startup).
+
+Load the satellite as a datafile on first use, trying the user UI language,
+its neutral parent, the LN module's fallback language and finally en-US, and
+cache the result per module. LoadResource() resolves resources that live in
+a satellite mapping against the satellite.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ dlls/kernelbase/kernelbase.h |  32 +++++++
+ dlls/kernelbase/loader.c     | 159 +++++++++++++++++++++++++++++++++++
+ dlls/kernelbase/locale.c     |  33 +-------
+ 3 files changed, 192 insertions(+), 32 deletions(-)
+
+diff --git a/dlls/kernelbase/kernelbase.h b/dlls/kernelbase/kernelbase.h
+index e46ca0f..1d107b7 100644
+--- a/dlls/kernelbase/kernelbase.h
++++ b/dlls/kernelbase/kernelbase.h
+@@ -39,6 +39,38 @@ extern void init_locale( HMODULE module );
+ extern void init_console(void);
+ extern BOOL is_console_handle( HANDLE );
+ 
++#define MUI_SIGNATURE 0xfecdfecd
++struct mui_resource
++{
++    DWORD signature;
++    DWORD size;
++    DWORD version;
++    DWORD path_type;
++    DWORD file_type;
++    DWORD system_attributes;
++    DWORD fallback_location;
++    BYTE service_checksum[16];
++    BYTE checksum[16];
++    DWORD unk1[2];
++    DWORD mui_path_off;
++    DWORD mui_path_size;
++    DWORD unk2[2];
++    DWORD ln_type_name_off;
++    DWORD ln_type_name_size;
++    DWORD ln_type_id_off;
++    DWORD ln_type_id_size;
++    DWORD mui_type_name_off;
++    DWORD mui_type_name_size;
++    DWORD mui_type_id_off;
++    DWORD mui_type_id_size;
++    DWORD lang_off;
++    DWORD lang_size;
++    DWORD fallback_lang_off;
++    DWORD fallback_lang_size;
++};
++
++extern BOOL validate_mui_resource( const struct mui_resource *mui, DWORD size );
++
+ extern const WCHAR windows_dir[];
+ extern const WCHAR system_dir[];
+ 
+diff --git a/dlls/kernelbase/loader.c b/dlls/kernelbase/loader.c
+index f6347c1..b6d2d1a 100644
+--- a/dlls/kernelbase/loader.c
++++ b/dlls/kernelbase/loader.c
+@@ -56,6 +56,25 @@ static CRITICAL_SECTION_DEBUG critsect_debug =
+ };
+ static CRITICAL_SECTION exclusive_datafile_list_section = { &critsect_debug, -1, 0, 0, 0, 0 };
+ 
++/* language-neutral modules keep their localizable resources in a <dir>\<lang>\<name>.mui satellite */
++struct mui_satellite
++{
++    struct list entry;
++    HMODULE     module;     /* language-neutral module */
++    DWORD       timestamp;  /* tells apart different modules mapped at the same address */
++    HMODULE     mui;        /* satellite loaded as datafile, NULL if there is none */
++};
++static struct list mui_satellite_list = LIST_INIT( mui_satellite_list );
++
++static CRITICAL_SECTION mui_satellite_section;
++static CRITICAL_SECTION_DEBUG mui_critsect_debug =
++{
++    0, 0, &mui_satellite_section,
++    { &mui_critsect_debug.ProcessLocksList, &mui_critsect_debug.ProcessLocksList },
++      0, 0, { (DWORD_PTR)(__FILE__ ": mui_satellite_section") }
++};
++static CRITICAL_SECTION mui_satellite_section = { &mui_critsect_debug, -1, 0, 0, 0, 0 };
++
+ /***********************************************************************
+  * Modules
+  ***********************************************************************/
+@@ -1053,6 +1072,139 @@ BOOL WINAPI DECLSPEC_HOTPATCH EnumResourceTypesExW( HMODULE module, ENUMRESTYPEP
+ }
+ 
+ 
++/* returns the MUI configuration of a language-neutral main module, NULL for other modules */
++static const struct mui_resource *get_ln_mui_config( HMODULE module )
++{
++    const IMAGE_RESOURCE_DATA_ENTRY *entry;
++    const struct mui_resource *mui;
++    LDR_RESOURCE_INFO info;
++    ULONG size;
++
++    info.Type = (ULONG_PTR)L"MUI";
++    info.Name = 1;
++    info.Language = 0;
++    if (LdrFindResource_U( module, &info, 3, &entry )) return NULL;
++    if (LdrAccessResource( module, entry, (void **)&mui, &size )) return NULL;
++    if (!validate_mui_resource( mui, size )) return NULL;
++    if (!(mui->file_type & (MUI_FILETYPE_LANGUAGE_NEUTRAL_MAIN >> 1))) return NULL;
++    return mui;
++}
++
++static HMODULE load_mui_file( const WCHAR *module_path, const WCHAR *lang )
++{
++    const WCHAR *name;
++    WCHAR *path;
++    HMODULE mui;
++    SIZE_T len;
++
++    if (!lang[0] || !(name = wcsrchr( module_path, '\\' ))) return 0;
++    name++;
++    len = (name - module_path) + wcslen( lang ) + 1 + wcslen( name ) + 5;
++    if (!(path = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) ))) return 0;
++    memcpy( path, module_path, (name - module_path) * sizeof(WCHAR) );
++    swprintf( path + (name - module_path), len - (name - module_path), L"%s\\%s.mui", lang, name );
++    mui = GetFileAttributesW( path ) != INVALID_FILE_ATTRIBUTES ? LoadLibraryExW( path, 0, LOAD_LIBRARY_AS_DATAFILE ) : 0;
++    TRACE( "%s -> %p\n", debugstr_w(path), mui );
++    HeapFree( GetProcessHeap(), 0, path );
++    return mui;
++}
++
++/* find the satellite for the user's UI language, its neutral parent, the module's fallback language or en-US */
++static HMODULE load_mui_satellite( HMODULE module )
++{
++    const struct mui_resource *mui;
++    WCHAR path[MAX_PATH], lang[LOCALE_NAME_MAX_LENGTH], *p;
++    HMODULE ret = 0;
++    DWORD len;
++
++    if (!(mui = get_ln_mui_config( module ))) return 0;
++    len = GetModuleFileNameW( module, path, ARRAY_SIZE(path) );
++    if (!len || len >= ARRAY_SIZE(path)) return 0;
++
++    if (LCIDToLocaleName( MAKELCID( GetUserDefaultUILanguage(), SORT_DEFAULT ), lang, ARRAY_SIZE(lang), 0 ))
++    {
++        if ((ret = load_mui_file( path, lang ))) return ret;
++        if ((p = wcschr( lang, '-' )))
++        {
++            *p = 0;
++            if ((ret = load_mui_file( path, lang ))) return ret;
++        }
++    }
++    if (mui->fallback_lang_size >= sizeof(WCHAR) && mui->fallback_lang_size <= sizeof(lang))
++    {
++        memcpy( lang, (const char *)mui + mui->fallback_lang_off, mui->fallback_lang_size );
++        lang[mui->fallback_lang_size / sizeof(WCHAR) - 1] = 0;
++        if ((ret = load_mui_file( path, lang ))) return ret;
++    }
++    return load_mui_file( path, L"en-US" );
++}
++
++static HMODULE get_mui_satellite( HMODULE module )
++{
++    const IMAGE_NT_HEADERS *nt;
++    struct mui_satellite *sat, *new_sat;
++    HMODULE mui;
++
++    if ((ULONG_PTR)module & 3) return 0;  /* datafile modules are not handled */
++    if (!(nt = RtlImageNtHeader( module ))) return 0;
++
++    RtlEnterCriticalSection( &mui_satellite_section );
++    LIST_FOR_EACH_ENTRY( sat, &mui_satellite_list, struct mui_satellite, entry )
++    {
++        if (sat->module != module || sat->timestamp != nt->FileHeader.TimeDateStamp) continue;
++        mui = sat->mui;
++        RtlLeaveCriticalSection( &mui_satellite_section );
++        return mui;
++    }
++    RtlLeaveCriticalSection( &mui_satellite_section );
++
++    /* loading may take the loader lock, so don't hold our lock meanwhile */
++    mui = load_mui_satellite( module );
++    if (!(new_sat = HeapAlloc( GetProcessHeap(), 0, sizeof(*new_sat) ))) return mui;
++    new_sat->module = module;
++    new_sat->timestamp = nt->FileHeader.TimeDateStamp;
++    new_sat->mui = mui;
++
++    RtlEnterCriticalSection( &mui_satellite_section );
++    LIST_FOR_EACH_ENTRY( sat, &mui_satellite_list, struct mui_satellite, entry )
++    {
++        if (sat->module != module || sat->timestamp != new_sat->timestamp) continue;
++        /* another thread got there first */
++        RtlLeaveCriticalSection( &mui_satellite_section );
++        if (mui) FreeLibrary( mui );
++        HeapFree( GetProcessHeap(), 0, new_sat );
++        return sat->mui;
++    }
++    list_add_tail( &mui_satellite_list, &new_sat->entry );
++    RtlLeaveCriticalSection( &mui_satellite_section );
++    return mui;
++}
++
++/* resources found through a satellite live in the satellite's mapping, not in the module's */
++static HMODULE get_resource_module( HMODULE module, HRSRC rsrc )
++{
++    const IMAGE_NT_HEADERS *nt;
++    struct mui_satellite *sat;
++    MEMORY_BASIC_INFORMATION mbi;
++    HMODULE ret = module;
++
++    if ((ULONG_PTR)module & 3) return module;
++    if (!(nt = RtlImageNtHeader( module ))) return module;
++    if ((ULONG_PTR)rsrc - (ULONG_PTR)module < nt->OptionalHeader.SizeOfImage) return module;
++    if (!VirtualQuery( rsrc, &mbi, sizeof(mbi) )) return module;
++
++    RtlEnterCriticalSection( &mui_satellite_section );
++    LIST_FOR_EACH_ENTRY( sat, &mui_satellite_list, struct mui_satellite, entry )
++    {
++        if (sat->module != module || !sat->mui) continue;
++        if ((void *)((ULONG_PTR)sat->mui & ~3) == mbi.AllocationBase) ret = sat->mui;
++        break;
++    }
++    RtlLeaveCriticalSection( &mui_satellite_section );
++    return ret;
++}
++
++
+ /**********************************************************************
+  *	    FindResourceExW  (kernelbase.@)
+  */
+@@ -1062,6 +1214,7 @@ HRSRC WINAPI DECLSPEC_HOTPATCH FindResourceExW( HMODULE module, LPCWSTR type, LP
+     UNICODE_STRING nameW, typeW;
+     LDR_RESOURCE_INFO info;
+     const IMAGE_RESOURCE_DATA_ENTRY *entry = NULL;
++    HMODULE mui;
+ 
+     TRACE( "%p %s %s %04x\n", module, debugstr_w(type), debugstr_w(name), lang );
+ 
+@@ -1076,6 +1229,11 @@ HRSRC WINAPI DECLSPEC_HOTPATCH FindResourceExW( HMODULE module, LPCWSTR type, LP
+         info.Name = (ULONG_PTR)nameW.Buffer;
+         info.Language = lang;
+         status = LdrFindResource_U( module, &info, 3, &entry );
++        if ((status == STATUS_RESOURCE_TYPE_NOT_FOUND || status == STATUS_RESOURCE_NAME_NOT_FOUND ||
++             status == STATUS_RESOURCE_LANG_NOT_FOUND || status == STATUS_RESOURCE_DATA_NOT_FOUND) &&
++            (IS_INTRESOURCE(typeW.Buffer) || wcsicmp( typeW.Buffer, L"MUI" )) &&
++            (mui = get_mui_satellite( module )))
++            status = LdrFindResource_U( mui, &info, 3, &entry );
+     done:
+         if (status != STATUS_SUCCESS) SetLastError( RtlNtStatusToDosError(status) );
+     }
+@@ -1120,6 +1278,7 @@ HGLOBAL WINAPI DECLSPEC_HOTPATCH LoadResource( HINSTANCE module, HRSRC rsrc )
+ 
+     if (!rsrc) return 0;
+     if (!module) module = GetModuleHandleW( 0 );
++    module = get_resource_module( module, rsrc );
+     if (!set_ntstatus( LdrAccessResource( module, (IMAGE_RESOURCE_DATA_ENTRY *)rsrc, &ret, NULL )))
+         return 0;
+     return ret;
+diff --git a/dlls/kernelbase/locale.c b/dlls/kernelbase/locale.c
+index 651f45b..1ccfdc3 100644
+--- a/dlls/kernelbase/locale.c
++++ b/dlls/kernelbase/locale.c
+@@ -5731,38 +5731,7 @@ done:
+ }
+ 
+ 
+-#define MUI_SIGNATURE 0xfecdfecd
+-struct mui_resource
+-{
+-    DWORD signature;
+-    DWORD size;
+-    DWORD version;
+-    DWORD path_type;
+-    DWORD file_type;
+-    DWORD system_attributes;
+-    DWORD fallback_location;
+-    BYTE service_checksum[16];
+-    BYTE checksum[16];
+-    DWORD unk1[2];
+-    DWORD mui_path_off;
+-    DWORD mui_path_size;
+-    DWORD unk2[2];
+-    DWORD ln_type_name_off;
+-    DWORD ln_type_name_size;
+-    DWORD ln_type_id_off;
+-    DWORD ln_type_id_size;
+-    DWORD mui_type_name_off;
+-    DWORD mui_type_name_size;
+-    DWORD mui_type_id_off;
+-    DWORD mui_type_id_size;
+-    DWORD lang_off;
+-    DWORD lang_size;
+-    DWORD fallback_lang_off;
+-    DWORD fallback_lang_size;
+-};
+-
+-
+-static BOOL validate_mui_resource(struct mui_resource *mui, DWORD size)
++BOOL validate_mui_resource( const struct mui_resource *mui, DWORD size )
+ {
+     if (size >= sizeof(DWORD) && mui->signature != MUI_SIGNATURE)
+     {
+-- 
+2.55.0
+

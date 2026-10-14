@@ -1,0 +1,31 @@
+From 85763f18a8555a61a0132c8be3ca64b88729197b Mon Sep 17 00:00:00 2001
+From: Zhiyi Zhang <zzhang@codeweavers.com>
+Date: Fri, 13 Mar 2026 10:13:35 +0800
+Subject: [PATCH 35/73] dcomp: Return S_OK for visual_unknown_method20().
+
+---
+ dlls/dcomp/visual.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/dlls/dcomp/visual.c b/dlls/dcomp/visual.c
+index 4f9e5ea..d988670 100644
+--- a/dlls/dcomp/visual.c
++++ b/dlls/dcomp/visual.c
+@@ -400,10 +400,11 @@ static HRESULT WINAPI visual_unknown_method19(IDCompositionVisualUnknown *iface,
+     return S_OK;
+ }
+ 
+-static HRESULT WINAPI visual_unknown_method20(IDCompositionVisualUnknown *iface)
++static HRESULT WINAPI visual_unknown_method20(IDCompositionVisualUnknown *iface, float parameter1)
+ {
+-    FIXME("iface %p stub!\n", iface);
+-    return E_NOTIMPL;
++    FIXME("iface %p parameter1 %f stub!\n", iface, parameter1);
++
++    return S_OK;
+ }
+ 
+ static HRESULT WINAPI visual_unknown_method21(IDCompositionVisualUnknown *iface)
+-- 
+2.55.0
+
