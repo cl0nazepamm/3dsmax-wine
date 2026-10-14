@@ -25,7 +25,7 @@ Nothing here touches or bypasses Autodesk licensing.
 
 Tested so far: creating and editing primitives, viewport navigation, UI panels. Startup takes about 30 s on an i5-10210U with UHD 620.
 
-Skipped on purpose: the Material Library (MSIX/AdIX, ODIS error 4005), Arnold, USD, Substance, and other optional plugins.
+Skipped on purpose: the Material Library (MSIX/AdIX, ODIS error 4005), USD, Substance, and other optional plugins.
 
 The full investigation log, with symptom, root cause and fix for each step, is in [docs/JOURNAL.md](docs/JOURNAL.md).
 
