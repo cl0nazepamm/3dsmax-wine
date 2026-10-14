@@ -1,7 +1,7 @@
 From 496c21e4617977b497e11dcd2c71f8d6b9ac5d09 Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:35 +0800
-Subject: [PATCH 38/73] dcomp/tests: Add tests for IDCompositionDeviceUnknown.
+Subject: [PATCH 38/74] dcomp/tests: Add tests for IDCompositionDeviceUnknown.
 
 ---
  dlls/dcomp/tests/dcomp.c | 6 ++++++

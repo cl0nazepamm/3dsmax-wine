@@ -1,7 +1,7 @@
 From 77353db47c1507c1947454073882c05b00fc622e Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:35 +0800
-Subject: [PATCH 43/73] dcomp: Implement some visual methods.
+Subject: [PATCH 43/74] dcomp: Implement some visual methods.
 
 Implement visual2_SetBitmapInterpolationMode(), visual2_SetBorderMode(),
 visual2_SetBackFaceVisibility(), and visual_AddVisual().

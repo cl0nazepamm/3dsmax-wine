@@ -1,7 +1,7 @@
 From b8cc0bfd0de732dec96f840c42376e03a18ce054 Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:35 +0800
-Subject: [PATCH 09/73] dcomp: Add IDCompositionDesktopDevice stub.
+Subject: [PATCH 09/74] dcomp: Add IDCompositionDesktopDevice stub.
 
 ---
  dlls/dcomp/dcomp_private.h |   6 +-

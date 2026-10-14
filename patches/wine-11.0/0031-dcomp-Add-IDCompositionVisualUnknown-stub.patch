@@ -1,7 +1,7 @@
 From 7c4697a9c2da628342cafb098e9f0e24e4284300 Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:35 +0800
-Subject: [PATCH 31/73] dcomp: Add IDCompositionVisualUnknown() stub.
+Subject: [PATCH 31/74] dcomp: Add IDCompositionVisualUnknown() stub.
 
 ---
  dlls/dcomp/dcomp_private.h         |   8 +-

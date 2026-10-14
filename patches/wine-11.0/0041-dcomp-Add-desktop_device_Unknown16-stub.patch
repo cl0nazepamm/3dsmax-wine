@@ -1,7 +1,7 @@
 From e294bda16fce49d78777c49a1494d5a78c7ceaa7 Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:35 +0800
-Subject: [PATCH 41/73] dcomp: Add desktop_device_Unknown16() stub.
+Subject: [PATCH 41/74] dcomp: Add desktop_device_Unknown16() stub.
 
 ---
  dlls/dcomp/dcomp_private_iface.idl |  2 +-

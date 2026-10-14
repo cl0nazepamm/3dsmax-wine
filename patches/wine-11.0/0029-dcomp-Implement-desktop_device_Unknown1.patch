@@ -1,7 +1,7 @@
 From 6b3210054f83b52a2895cd6108944b8c61b1eacd Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:35 +0800
-Subject: [PATCH 29/73] dcomp: Implement desktop_device_Unknown1().
+Subject: [PATCH 29/74] dcomp: Implement desktop_device_Unknown1().
 
 ---
  dlls/dcomp/dcomp_private_iface.idl | 22 +++++++++++++++++-

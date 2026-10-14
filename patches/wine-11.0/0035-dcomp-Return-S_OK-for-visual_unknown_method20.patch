@@ -1,7 +1,7 @@
 From 85763f18a8555a61a0132c8be3ca64b88729197b Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:35 +0800
-Subject: [PATCH 35/73] dcomp: Return S_OK for visual_unknown_method20().
+Subject: [PATCH 35/74] dcomp: Return S_OK for visual_unknown_method20().
 
 ---
  dlls/dcomp/visual.c | 7 ++++---

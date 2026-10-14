@@ -1,7 +1,7 @@
 From 615b6adf9f7f9adae02a35f64468271bb33255df Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:36 +0800
-Subject: [PATCH 54/73] dcomp/tests: Add tests for
+Subject: [PATCH 54/74] dcomp/tests: Add tests for
  IDCompositionVisual::SetContent() with IDCompositionSurface.
 
 ---

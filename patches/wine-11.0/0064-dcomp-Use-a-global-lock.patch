@@ -1,7 +1,7 @@
 From 1f6bbe82c546da16070706ca02dffebe5d5ce01d Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:36 +0800
-Subject: [PATCH 64/73] dcomp: Use a global lock.
+Subject: [PATCH 64/74] dcomp: Use a global lock.
 
 For example, visual_SetContent() can be called when the composition thread is running.
 This is needed because Commit() is executed immediately unlike Windows, which uses a command list.

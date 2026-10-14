@@ -1,7 +1,7 @@
 From 4de4fb9c240c712a8768d971040347a7d2d58665 Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:35 +0800
-Subject: [PATCH 28/73] dcomp: Add IDCompositionDesktopDevicePartner tests.
+Subject: [PATCH 28/74] dcomp: Add IDCompositionDesktopDevicePartner tests.
 
 ---
  dlls/dcomp/tests/Makefile.in |  4 +++-

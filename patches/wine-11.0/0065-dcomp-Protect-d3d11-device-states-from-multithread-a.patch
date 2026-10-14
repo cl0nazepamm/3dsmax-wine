@@ -1,7 +1,7 @@
 From 38275ee415148829260a4ace888f69dff4ea9e4f Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:36 +0800
-Subject: [PATCH 65/73] dcomp: Protect d3d11 device states from multithread
+Subject: [PATCH 65/74] dcomp: Protect d3d11 device states from multithread
  access.
 
 Another thread might be rendering as well, so we need to make sure their resources and states

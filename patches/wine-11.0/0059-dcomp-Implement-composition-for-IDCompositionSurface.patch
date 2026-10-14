@@ -1,7 +1,7 @@
 From bdb0ce168f78c6c063e5f25752b752892fb5373e Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:36 +0800
-Subject: [PATCH 59/73] dcomp: Implement composition for IDCompositionSurface.
+Subject: [PATCH 59/74] dcomp: Implement composition for IDCompositionSurface.
 
 ---
  dlls/dcomp/device.c      | 95 ++++++++++++++++++++++++++++++----------

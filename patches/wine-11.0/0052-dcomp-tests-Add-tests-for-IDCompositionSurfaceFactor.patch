@@ -1,7 +1,7 @@
 From 8c49ae95aecfb1214691dd426244b0cffc295fc6 Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:36 +0800
-Subject: [PATCH 52/73] dcomp/tests: Add tests for
+Subject: [PATCH 52/74] dcomp/tests: Add tests for
  IDCompositionSurfaceFactory::CreateSurface().
 
 ---

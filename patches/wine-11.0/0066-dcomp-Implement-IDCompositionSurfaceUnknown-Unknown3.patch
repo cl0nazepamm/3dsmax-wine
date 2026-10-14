@@ -1,7 +1,7 @@
 From 57804c8fc688af837bd09d1703ac76a42a3aadb9 Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:36 +0800
-Subject: [PATCH 66/73] dcomp: Implement
+Subject: [PATCH 66/74] dcomp: Implement
  IDCompositionSurfaceUnknown::Unknown3().
 
 Looks like a resize method.

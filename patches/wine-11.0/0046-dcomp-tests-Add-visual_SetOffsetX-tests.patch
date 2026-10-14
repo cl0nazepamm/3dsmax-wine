@@ -1,7 +1,7 @@
 From 42bee2bbad239ca3056e7da0256fa2beaae31b18 Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:35 +0800
-Subject: [PATCH 46/73] dcomp/tests: Add visual_SetOffsetX() tests.
+Subject: [PATCH 46/74] dcomp/tests: Add visual_SetOffsetX() tests.
 
 ---
  dlls/dcomp/tests/dcomp.c | 37 +++++++++++++++++++++++++++++++++++++

@@ -1,7 +1,7 @@
 From 77d3ed44e04342e53924561ff4bdd3e8db51e782 Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:35 +0800
-Subject: [PATCH 51/73] dcomp: Implement desktop_device_CreateSurfaceFactory().
+Subject: [PATCH 51/74] dcomp: Implement desktop_device_CreateSurfaceFactory().
 
 ---
  dlls/dcomp/Makefile.in     |   1 +

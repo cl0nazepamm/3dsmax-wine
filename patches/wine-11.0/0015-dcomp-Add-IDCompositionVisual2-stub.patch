@@ -1,7 +1,7 @@
 From d1175051d3e30a8cec1445b32f037ba0cdbc3016 Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:35 +0800
-Subject: [PATCH 15/73] dcomp: Add IDCompositionVisual2 stub.
+Subject: [PATCH 15/74] dcomp: Add IDCompositionVisual2 stub.
 
 ---
  dlls/dcomp/dcomp_private.h | 12 ++++--

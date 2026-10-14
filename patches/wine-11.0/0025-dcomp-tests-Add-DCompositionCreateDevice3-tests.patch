@@ -1,7 +1,7 @@
 From 6c96e4912a386a50e332aa9a16cef9c78afe6c58 Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:35 +0800
-Subject: [PATCH 25/73] dcomp/tests: Add DCompositionCreateDevice3() tests.
+Subject: [PATCH 25/74] dcomp/tests: Add DCompositionCreateDevice3() tests.
 
 ---
  dlls/dcomp/tests/dcomp.c | 73 ++++++++++++++++++++++++++++++++++++++++

@@ -1,7 +1,7 @@
 From caa1bc56335db584c097e2129f8f7a1ff6efaece Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:36 +0800
-Subject: [PATCH 55/73] dcomp: Accept IDCompositionSurface in
+Subject: [PATCH 55/74] dcomp: Accept IDCompositionSurface in
  visual_SetContent().
 
 ---

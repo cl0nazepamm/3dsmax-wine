@@ -1,7 +1,7 @@
 From 1877e0731edb4d44d4d7164b31f9ae58504d7e58 Mon Sep 17 00:00:00 2001
 From: cl0nazepamm <46329307+cl0nazepamm@users.noreply.github.com>
 Date: Wed, 14 Oct 2026 05:59:29 +0300
-Subject: [PATCH 71/73] include: Update dcomp.idl from upstream master
+Subject: [PATCH 71/74] include: Update dcomp.idl from upstream master
  (IDCompositionDevice3 etc.).
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

@@ -7,6 +7,7 @@ B="$HOME/src/wine-11.0/build64"
 for f in "$@"; do
     base=$(basename "$f")
     case "$f" in
+        server/wineserver) dst="$WINEROOT/bin/wineserver" ;;
         *.so) dst="$WINEROOT/wine/x86_64-unix/$base" ;;
         */x86_64-windows/*) dst="$WINEROOT/wine/x86_64-windows/$base" ;;
         */i386-windows/*) dst="$WINEROOT/wine/i386-windows/$base" ;;

@@ -1,7 +1,7 @@
 From 06d25950d8aef4bd590506c8af9e4a5ace8d874c Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:35 +0800
-Subject: [PATCH 19/73] dcomp: Implement IDCompositionTarget::SetRoot().
+Subject: [PATCH 19/74] dcomp: Implement IDCompositionTarget::SetRoot().
 
 ---
  dlls/dcomp/dcomp_private.h |  2 ++

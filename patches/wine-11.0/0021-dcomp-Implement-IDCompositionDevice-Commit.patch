@@ -1,7 +1,7 @@
 From bfc2281076ddf609df18fea6f783e78b84aaab6f Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:35 +0800
-Subject: [PATCH 21/73] dcomp: Implement IDCompositionDevice::Commit().
+Subject: [PATCH 21/74] dcomp: Implement IDCompositionDevice::Commit().
 
 TODO: Use ID2D1CommandList? Because many directcomposition calls don't take effect before calling
 IDCompositionDevice::Commit() so there is a command list.

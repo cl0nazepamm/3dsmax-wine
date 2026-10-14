@@ -1,7 +1,7 @@
 From 4b031f042749aa6230ca8570613c81edbe26684f Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 6 Mar 2026 18:13:32 +0800
-Subject: [PATCH 73/73] HACK: dxgi: Add a
+Subject: [PATCH 73/74] HACK: dxgi: Add a
  dxgi_factory_CreateSwapChainForComposition() stub.
 
 For debugging only because we will need to use DXVK's dxgi.

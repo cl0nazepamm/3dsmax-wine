@@ -1,7 +1,7 @@
 From b8367792f9a07254cfc60b0a8fa297828ecc247d Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:36 +0800
-Subject: [PATCH 62/73] dcomp/tests: Test rendering more surface formats.
+Subject: [PATCH 62/74] dcomp/tests: Test rendering more surface formats.
 
 TODO: Test IDXGISwapchain1 surface formats as well.
 ---

@@ -1,7 +1,7 @@
 From 48ab375d95838c063e2d4143219a55f0b815fb22 Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:36 +0800
-Subject: [PATCH 63/73] dcomp: Implement DXGI_FORMAT_R8G8B8A8_UNORM surface
+Subject: [PATCH 63/74] dcomp: Implement DXGI_FORMAT_R8G8B8A8_UNORM surface
  conversion.
 
 ---

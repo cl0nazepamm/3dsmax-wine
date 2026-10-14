@@ -1,7 +1,7 @@
 From de6f1637ce4e147cc68d6ed3d9190c2b3a126827 Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:35 +0800
-Subject: [PATCH 22/73] dcomp: Add DCompositionCreateSharedVisualHandle() stub.
+Subject: [PATCH 22/74] dcomp: Add DCompositionCreateSharedVisualHandle() stub.
 
 TODO: DCompositionCreateSharedVisualHandle() need to return a real NT handle.
 ---

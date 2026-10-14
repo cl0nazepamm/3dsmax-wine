@@ -1,7 +1,7 @@
 From 41768d0c7470cb72de495ae9670ad923407ffb38 Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:35 +0800
-Subject: [PATCH 47/73] dcomp: Implement visual_SetOffsetX().
+Subject: [PATCH 47/74] dcomp: Implement visual_SetOffsetX().
 
 ---
  dlls/dcomp/dcomp_private.h | 1 +

@@ -1,7 +1,7 @@
 From b980f1c9e50f5f25196b7bd446a9d3fd85ebf95a Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:35 +0800
-Subject: [PATCH 26/73] dcomp: Implement DCompositionCreateDevice3().
+Subject: [PATCH 26/74] dcomp: Implement DCompositionCreateDevice3().
 
 ---
  dlls/dcomp/device.c      |  6 +++++-

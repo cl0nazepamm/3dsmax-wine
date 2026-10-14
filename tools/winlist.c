@@ -2,7 +2,9 @@
  *   winlist all            include hidden windows
  *   winlist tree           visible top-level windows with their child window trees
  *   winlist click H X Y    left-click window H (hex) at client coords X,Y
- *   winlist show|hide H... ShowWindowAsync(SW_SHOWNA / SW_HIDE) on windows (hex handles) */
+ *   winlist show|hide H... ShowWindowAsync(SW_SHOWNA / SW_HIDE) on windows (hex handles)
+ *   winlist class H        class/window styles and background brush of H
+ *   winlist redraw H N     invalidate+erase H and all children N times, 150ms apart */
 #include <windows.h>
 #include <stdio.h>
 
@@ -62,6 +64,29 @@ int wmain(int argc, WCHAR **argv)
             HWND hwnd = (HWND)(ULONG_PTR)_wcstoui64(argv[i], NULL, 16);
             wprintf(L"%ls %p -> %d\n", argv[1], hwnd, ShowWindowAsync(hwnd, cmd));
         }
+        return 0;
+    }
+    if (argc > 2 && !wcscmp(argv[1], L"class"))
+    {
+        HWND hwnd = (HWND)(ULONG_PTR)_wcstoui64(argv[2], NULL, 16);
+        WCHAR cls[128];
+        GetClassNameW(hwnd, cls, 128);
+        wprintf(L"%p [%ls] style=%08lx exstyle=%08lx class_style=%08lx hbrBackground=%p wndproc=%p\n", hwnd, cls,
+                GetWindowLongW(hwnd, GWL_STYLE), GetWindowLongW(hwnd, GWL_EXSTYLE),
+                GetClassLongW(hwnd, GCL_STYLE), (void *)GetClassLongPtrW(hwnd, GCLP_HBRBACKGROUND),
+                (void *)GetClassLongPtrW(hwnd, GCLP_WNDPROC));
+        return 0;
+    }
+    if (argc > 3 && !wcscmp(argv[1], L"redraw"))
+    {
+        HWND hwnd = (HWND)(ULONG_PTR)_wcstoui64(argv[2], NULL, 16);
+        int count = _wtoi(argv[3]);
+        for (int i = 0; i < count; i++)
+        {
+            RedrawWindow(hwnd, NULL, NULL, RDW_INVALIDATE | RDW_ERASE | RDW_ALLCHILDREN | RDW_FRAME);
+            Sleep(150);
+        }
+        wprintf(L"redrew %p %d times\n", hwnd, count);
         return 0;
     }
     if (argc > 4 && !wcscmp(argv[1], L"click"))

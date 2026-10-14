@@ -1,7 +1,7 @@
 From 70735ccba95063337608dae93309efc1e393deec Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:35 +0800
-Subject: [PATCH 14/73] dcomp: Add IDCompositionVisual stub.
+Subject: [PATCH 14/74] dcomp: Add IDCompositionVisual stub.
 
 ---
  dlls/dcomp/Makefile.in     |   3 +-

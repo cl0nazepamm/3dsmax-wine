@@ -1,7 +1,7 @@
 From c7580e57f3350198616b842b17bd72c8773d4d56 Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:35 +0800
-Subject: [PATCH 12/73] dcomp: Add IDCompositionTarget stub.
+Subject: [PATCH 12/74] dcomp: Add IDCompositionTarget stub.
 
 ---
  dlls/dcomp/Makefile.in     |   6 +-

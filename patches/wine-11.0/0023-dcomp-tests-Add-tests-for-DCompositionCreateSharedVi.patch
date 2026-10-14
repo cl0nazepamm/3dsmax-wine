@@ -1,7 +1,7 @@
 From c07ea827b6b94b63d61940ffac79c11703b052b2 Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:35 +0800
-Subject: [PATCH 23/73] dcomp/tests: Add tests for
+Subject: [PATCH 23/74] dcomp/tests: Add tests for
  DCompositionCreateSharedVisualHandle().
 
 ---

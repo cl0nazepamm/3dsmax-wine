@@ -1,7 +1,7 @@
 From 3110c849d445a0d0e14cd8dda1055e63f9924861 Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:35 +0800
-Subject: [PATCH 18/73] dcomp/tests: Add IDCompositionTarget::SetRoot() tests.
+Subject: [PATCH 18/74] dcomp/tests: Add IDCompositionTarget::SetRoot() tests.
 
 ---
  dlls/dcomp/tests/dcomp.c | 64 ++++++++++++++++++++++++++++++++++++++++

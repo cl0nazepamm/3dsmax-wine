@@ -4,3 +4,4 @@ dlls/ntdll/x86_64-windows/ntdll.dll
 dlls/wintrust/x86_64-windows/wintrust.dll
 dlls/dcomp/x86_64-windows/dcomp.dll
 dlls/dxgi/x86_64-windows/dxgi.dll
+server/wineserver

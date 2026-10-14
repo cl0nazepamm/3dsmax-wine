@@ -1,7 +1,7 @@
 From e04462ce1e6952ea73e22aab7659e1315444b1bb Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:35 +0800
-Subject: [PATCH 44/73] dcomp: Return S_OK for visual_unknown_method14().
+Subject: [PATCH 44/74] dcomp: Return S_OK for visual_unknown_method14().
 
 ---
  dlls/dcomp/dcomp_private_iface.idl | 2 +-

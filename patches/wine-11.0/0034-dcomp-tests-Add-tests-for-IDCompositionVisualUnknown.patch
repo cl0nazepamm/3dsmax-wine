@@ -1,7 +1,7 @@
 From 58691fde5af3910b289d2fc0d1619c0e369b9dd9 Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:35 +0800
-Subject: [PATCH 34/73] dcomp/tests: Add tests for
+Subject: [PATCH 34/74] dcomp/tests: Add tests for
  IDCompositionVisualUnknown::Unknown19().
 
 ---

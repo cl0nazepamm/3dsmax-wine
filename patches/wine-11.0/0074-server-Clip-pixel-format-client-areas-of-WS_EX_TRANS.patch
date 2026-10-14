@@ -1,0 +1,61 @@
+From 4f0bfc120c843746944cf36288bec9087f5f32c4 Mon Sep 17 00:00:00 2001
+From: cl0nazepamm <46329307+cl0nazepamm@users.noreply.github.com>
+Date: Wed, 14 Oct 2026 06:27:19 +0300
+Subject: [PATCH 74/74] server: Clip pixel-format client areas of
+ WS_EX_TRANSPARENT children out of the surface.
+
+clip_pixel_format_children() skipped WS_EX_TRANSPARENT children entirely, so
+a transparent child window rendering with GL/Vulkan (3ds Max's Nitrous
+viewport is a WS_EX_TRANSPARENT "Label" window presenting through DXVK) was
+never excluded from its toplevel's window surface. Window surfaces start out
+white and the viewport never paints itself with GDI, so every surface flush
+overlapping it (hover, menus, floaters moving over it) blitted white over the
+last presented frame until the next present: white flashes.
+
+Transparent children still don't cover their siblings, but their own custom
+pixel format client area is now subtracted like for any other child.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ server/window.c | 25 ++++++++++++++++---------
+ 1 file changed, 16 insertions(+), 9 deletions(-)
+
+diff --git a/server/window.c b/server/window.c
+index d58f643..2f59953 100644
+--- a/server/window.c
++++ b/server/window.c
+@@ -1350,15 +1350,22 @@ static struct region *clip_pixel_format_children( struct window *parent, struct
+     LIST_FOR_EACH_ENTRY_REV( ptr, &parent->children, struct window, entry )
+     {
+         if (!(ptr->style & WS_VISIBLE)) continue;
+-        if (ptr->ex_style & WS_EX_TRANSPARENT) continue;
+-
+-        /* add the visible rect */
+-        set_region_rect( clip, &ptr->visible_rect );
+-        if (ptr->win_region && !intersect_window_region( clip, ptr )) break;
+-        offset_region( clip, offset_x, offset_y );
+-        if (!intersect_region( clip, clip, parent_clip )) break;
+-        if (!union_region( region, region, clip )) break;
+-        if (!(ptr->paint_flags & (PAINT_HAS_PIXEL_FORMAT | PAINT_PIXEL_FORMAT_CHILD))) continue;
++        if (ptr->ex_style & WS_EX_TRANSPARENT)
++        {
++            /* transparent windows don't cover their siblings, but a custom pixel format
++             * client area must still not be painted over by the parent surface */
++            if (!(ptr->paint_flags & (PAINT_HAS_PIXEL_FORMAT | PAINT_PIXEL_FORMAT_CHILD))) continue;
++        }
++        else
++        {
++            /* add the visible rect */
++            set_region_rect( clip, &ptr->visible_rect );
++            if (ptr->win_region && !intersect_window_region( clip, ptr )) break;
++            offset_region( clip, offset_x, offset_y );
++            if (!intersect_region( clip, clip, parent_clip )) break;
++            if (!union_region( region, region, clip )) break;
++            if (!(ptr->paint_flags & (PAINT_HAS_PIXEL_FORMAT | PAINT_PIXEL_FORMAT_CHILD))) continue;
++        }
+ 
+         /* subtract the client rect if it uses a custom pixel format */
+         set_region_rect( clip, &ptr->client_rect );
+-- 
+2.55.0
+

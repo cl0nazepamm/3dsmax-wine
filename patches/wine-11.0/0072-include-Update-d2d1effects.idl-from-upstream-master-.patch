@@ -1,7 +1,7 @@
 From 682721c81578f83f415447e15302d3757976f4d8 Mon Sep 17 00:00:00 2001
 From: cl0nazepamm <46329307+cl0nazepamm@users.noreply.github.com>
 Date: Wed, 14 Oct 2026 05:59:56 +0300
-Subject: [PATCH 72/73] include: Update d2d1effects.idl from upstream master
+Subject: [PATCH 72/74] include: Update d2d1effects.idl from upstream master
  (needed by dcomp.idl).
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>

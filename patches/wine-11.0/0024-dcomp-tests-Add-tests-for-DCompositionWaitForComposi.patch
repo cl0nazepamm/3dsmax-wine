@@ -1,7 +1,7 @@
 From 0a4860713726dd7c2d96025cf38ebaccccbbfe12 Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:35 +0800
-Subject: [PATCH 24/73] dcomp/tests: Add tests for
+Subject: [PATCH 24/74] dcomp/tests: Add tests for
  DCompositionWaitForCompositorClock().
 
 ---

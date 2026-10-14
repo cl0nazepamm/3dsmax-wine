@@ -1,7 +1,7 @@
 From b3855af015b13172711128ce771d2e2a2b739a64 Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:35 +0800
-Subject: [PATCH 05/73] dcomp/tests: Add DCompositionCreateDevice() tests.
+Subject: [PATCH 05/74] dcomp/tests: Add DCompositionCreateDevice() tests.
 
 ---
  configure.ac                 |   1 +

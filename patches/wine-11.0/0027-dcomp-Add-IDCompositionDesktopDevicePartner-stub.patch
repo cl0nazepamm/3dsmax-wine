@@ -1,7 +1,7 @@
 From 224c3894d950e63de4a14ca4b289a26b0f226ec4 Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:35 +0800
-Subject: [PATCH 27/73] dcomp: Add IDCompositionDesktopDevicePartner() stub.
+Subject: [PATCH 27/74] dcomp: Add IDCompositionDesktopDevicePartner() stub.
 
 ---
  dlls/dcomp/Makefile.in             |   1 +

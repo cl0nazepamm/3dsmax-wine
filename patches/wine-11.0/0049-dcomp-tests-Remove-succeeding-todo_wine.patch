@@ -1,7 +1,7 @@
 From 12ab205afc76b70f8419e7c34bbe62f71a6f4265 Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:35 +0800
-Subject: [PATCH 49/73] dcomp/tests: Remove succeeding todo_wine.
+Subject: [PATCH 49/74] dcomp/tests: Remove succeeding todo_wine.
 
 ---
  dlls/dcomp/tests/dcomp.c | 4 ----

@@ -1,7 +1,7 @@
 From 661c3b23908d2846fe8c95653dddd141689e13c3 Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:35 +0800
-Subject: [PATCH 10/73] dcomp/tests: Add CreateTargetForHwnd() tests.
+Subject: [PATCH 10/74] dcomp/tests: Add CreateTargetForHwnd() tests.
 
 ---
  dlls/dcomp/tests/Makefile.in |   2 +-
