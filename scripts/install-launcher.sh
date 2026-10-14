@@ -31,4 +31,6 @@ rmdir "$APPS/wine/Programs/Autodesk" "$APPS/wine/Programs" "$APPS/wine" 2>/dev/n
 xdg-mime default 3dsmax-2027-wine.desktop application/x-wine-extension-max
 command -v update-desktop-database >/dev/null && update-desktop-database "$APPS" || true
 command -v gtk-update-icon-cache >/dev/null && gtk-update-icon-cache -q -t "$ICONS" 2>/dev/null || true
+source "$HOME/3dsmax-wine/scripts/env.sh"
+wine regedit 'Z:\home\clone\3dsmax-wine\scripts\desktop-integration.reg'
 echo "installed $APPS/3dsmax-2027-wine.desktop"

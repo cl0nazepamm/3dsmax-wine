@@ -1,0 +1,5 @@
+REGEDIT4
+
+; let wine draw a thin Windows-style caption for 3ds Max instead of GNOME's server-side title bar
+[HKEY_CURRENT_USER\Software\Wine\AppDefaults\3dsmax.exe\X11 Driver]
+"Decorated"="N"
