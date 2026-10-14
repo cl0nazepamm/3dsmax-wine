@@ -1,4 +1,4 @@
-From 718677502f363ad5fb11d330005ec0e41f920abb Mon Sep 17 00:00:00 2001
+From 8ba02a714032a4644704d7dbe395bfe81066040b Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:35 +0800
 Subject: [PATCH 13/74] dcomp/tests: Add IDCompositionDevice::CreateVisual()

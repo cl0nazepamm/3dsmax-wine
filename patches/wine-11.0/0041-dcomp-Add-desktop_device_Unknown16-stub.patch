@@ -1,4 +1,4 @@
-From e294bda16fce49d78777c49a1494d5a78c7ceaa7 Mon Sep 17 00:00:00 2001
+From 4f831cc1226ad8acc1491bff5f407323c7f171c4 Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:35 +0800
 Subject: [PATCH 41/74] dcomp: Add desktop_device_Unknown16() stub.

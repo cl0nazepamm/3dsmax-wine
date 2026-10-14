@@ -1,4 +1,4 @@
-From 4f0bfc120c843746944cf36288bec9087f5f32c4 Mon Sep 17 00:00:00 2001
+From 58e0055b121e56cffc74e2851d9e5faf2762f3fa Mon Sep 17 00:00:00 2001
 From: cl0nazepamm <46329307+cl0nazepamm@users.noreply.github.com>
 Date: Wed, 14 Oct 2026 06:27:19 +0300
 Subject: [PATCH 74/74] server: Clip pixel-format client areas of

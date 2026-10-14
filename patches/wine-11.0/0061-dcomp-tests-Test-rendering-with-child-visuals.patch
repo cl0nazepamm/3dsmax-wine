@@ -1,4 +1,4 @@
-From 0a14c30aeeb49d34b2f5d212f206e7cff4fe4af1 Mon Sep 17 00:00:00 2001
+From 2317585ed204f30662b8dbf7cba476ef7c4fa5af Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:36 +0800
 Subject: [PATCH 61/74] dcomp/tests: Test rendering with child visuals.

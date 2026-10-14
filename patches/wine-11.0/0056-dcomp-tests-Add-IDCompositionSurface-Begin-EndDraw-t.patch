@@ -1,4 +1,4 @@
-From bbf095eb9f7569c9423d757db824914be7cbb804 Mon Sep 17 00:00:00 2001
+From 6f4ca5d57474cf8c3766077fa9ed6089b21c35a6 Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:36 +0800
 Subject: [PATCH 56/74] dcomp/tests: Add IDCompositionSurface::Begin/EndDraw()

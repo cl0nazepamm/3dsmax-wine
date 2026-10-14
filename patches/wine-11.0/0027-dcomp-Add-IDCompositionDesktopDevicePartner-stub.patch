@@ -1,4 +1,4 @@
-From 224c3894d950e63de4a14ca4b289a26b0f226ec4 Mon Sep 17 00:00:00 2001
+From 8866bd0b3981c6a5b6774ad14e93f89a1e5383db Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:35 +0800
 Subject: [PATCH 27/74] dcomp: Add IDCompositionDesktopDevicePartner() stub.

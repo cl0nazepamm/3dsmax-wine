@@ -1,4 +1,4 @@
-From 8411a8ddca7f4e29972daed65ad79da65da3f544 Mon Sep 17 00:00:00 2001
+From 757e2245a65aa3782ade958f904a431328b1c8d1 Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:36 +0800
 Subject: [PATCH 57/74] dcomp/tests: Add tests for committing visual content of

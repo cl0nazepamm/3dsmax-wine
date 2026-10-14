@@ -1,4 +1,4 @@
-From 13602be6e32e9133d418ecd048c6bcf80cc725bd Mon Sep 17 00:00:00 2001
+From bd47c12ca2ae730d42f3d80da4d1726f0ecc5cb1 Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:35 +0800
 Subject: [PATCH 07/74] dcomp/tests: Add DCompositionCreateDevice2() tests.

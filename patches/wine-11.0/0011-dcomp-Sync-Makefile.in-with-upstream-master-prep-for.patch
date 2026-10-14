@@ -1,4 +1,4 @@
-From 9bb6bdb4a212224e78f54d7577128b78ab9928eb Mon Sep 17 00:00:00 2001
+From c79d9ec2976cccfb11cef66e98043e94cb29dfe6 Mon Sep 17 00:00:00 2001
 From: cl0nazepamm <46329307+cl0nazepamm@users.noreply.github.com>
 Date: Wed, 14 Oct 2026 05:58:48 +0300
 Subject: [PATCH 11/74] dcomp: Sync Makefile.in with upstream master (prep for

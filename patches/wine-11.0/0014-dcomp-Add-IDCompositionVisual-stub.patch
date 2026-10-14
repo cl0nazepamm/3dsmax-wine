@@ -1,4 +1,4 @@
-From 70735ccba95063337608dae93309efc1e393deec Mon Sep 17 00:00:00 2001
+From 64246ba8e621bce291fa418fad3deae22ad073e8 Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:35 +0800
 Subject: [PATCH 14/74] dcomp: Add IDCompositionVisual stub.

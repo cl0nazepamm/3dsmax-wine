@@ -1,4 +1,4 @@
-From cadbe6d9e5e704df3f5b72afaf5c3fb1e6664cf2 Mon Sep 17 00:00:00 2001
+From 1c6116e0ec38aa0042b08bbd4f8b0d982d11b513 Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:35 +0800
 Subject: [PATCH 08/74] dcomp: Add IDCompositionDevice2 stub.

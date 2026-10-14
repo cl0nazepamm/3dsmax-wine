@@ -1,4 +1,4 @@
-From ba5fdd332cf6eb30caed2df84e3dd0303d9dc277 Mon Sep 17 00:00:00 2001
+From 9c3e0a38a31d165b6d30c3c612abdf9c130fe574 Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:35 +0800
 Subject: [PATCH 40/74] dcomp/tests: Add tests for desktop_device_Unknown17().

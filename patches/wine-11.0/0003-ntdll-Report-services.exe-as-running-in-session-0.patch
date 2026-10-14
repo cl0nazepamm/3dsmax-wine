@@ -1,4 +1,4 @@
-From 8e16c03f92bb6172e467455d662513617dcd09f7 Mon Sep 17 00:00:00 2001
+From 2e00d6b1a5eb2834e5960679049f042ec9bd9274 Mon Sep 17 00:00:00 2001
 From: cl0nazepamm <46329307+cl0nazepamm@users.noreply.github.com>
 Date: Wed, 14 Oct 2026 05:21:28 +0300
 Subject: [PATCH 03/74] ntdll: Report services.exe as running in session 0.

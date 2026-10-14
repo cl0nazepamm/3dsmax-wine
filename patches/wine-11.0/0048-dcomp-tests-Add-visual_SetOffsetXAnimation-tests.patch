@@ -1,4 +1,4 @@
-From 450a2321a6d422de2467e0ca02841a41aa1bde1b Mon Sep 17 00:00:00 2001
+From b031e29ae399a756457684698d8fec361d8d8767 Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:35 +0800
 Subject: [PATCH 48/74] dcomp/tests: Add visual_SetOffsetXAnimation() tests.

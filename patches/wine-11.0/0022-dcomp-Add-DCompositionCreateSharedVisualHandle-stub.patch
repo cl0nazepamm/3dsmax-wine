@@ -1,4 +1,4 @@
-From de6f1637ce4e147cc68d6ed3d9190c2b3a126827 Mon Sep 17 00:00:00 2001
+From 488c90c9a68488e238d1565a08084bf62bd1cc27 Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:35 +0800
 Subject: [PATCH 22/74] dcomp: Add DCompositionCreateSharedVisualHandle() stub.

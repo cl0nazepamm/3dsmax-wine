@@ -1,4 +1,4 @@
-From 4de4fb9c240c712a8768d971040347a7d2d58665 Mon Sep 17 00:00:00 2001
+From 00487b0dbe0ce214cbb4f960822f2c3dbdd336e3 Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:35 +0800
 Subject: [PATCH 28/74] dcomp: Add IDCompositionDesktopDevicePartner tests.

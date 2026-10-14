@@ -1,4 +1,4 @@
-From 57804c8fc688af837bd09d1703ac76a42a3aadb9 Mon Sep 17 00:00:00 2001
+From 8283b593c6a5bbfbd954110f7fce4ebc3d8ed0fb Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:36 +0800
 Subject: [PATCH 66/74] dcomp: Implement

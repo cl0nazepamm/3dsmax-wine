@@ -1,4 +1,4 @@
-From bfc2281076ddf609df18fea6f783e78b84aaab6f Mon Sep 17 00:00:00 2001
+From 936f8a39bcee058b9d37438855407e4bd1bd4679 Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:35 +0800
 Subject: [PATCH 21/74] dcomp: Implement IDCompositionDevice::Commit().

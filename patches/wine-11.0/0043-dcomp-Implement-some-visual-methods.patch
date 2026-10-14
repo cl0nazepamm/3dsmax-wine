@@ -1,4 +1,4 @@
-From 77353db47c1507c1947454073882c05b00fc622e Mon Sep 17 00:00:00 2001
+From db93bf500f90b7f4404f1063c4c8f1c1be43f290 Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:35 +0800
 Subject: [PATCH 43/74] dcomp: Implement some visual methods.

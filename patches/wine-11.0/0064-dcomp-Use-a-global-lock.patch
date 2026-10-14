@@ -1,4 +1,4 @@
-From 1f6bbe82c546da16070706ca02dffebe5d5ce01d Mon Sep 17 00:00:00 2001
+From 75fd2001cd85f4ba548fe16c4771750f86e4da9d Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:36 +0800
 Subject: [PATCH 64/74] dcomp: Use a global lock.

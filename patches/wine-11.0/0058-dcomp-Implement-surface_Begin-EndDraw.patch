@@ -1,4 +1,4 @@
-From eae69d933a52fbece9289bc328e24957ff1eff2d Mon Sep 17 00:00:00 2001
+From bd2353802dfeda7812aa6c867bfd40dd281b4b50 Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:36 +0800
 Subject: [PATCH 58/74] dcomp: Implement surface_Begin/EndDraw().

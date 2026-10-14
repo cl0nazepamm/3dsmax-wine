@@ -1,4 +1,4 @@
-From f46b6069d5ac97491de05ef327a8a551541cba7f Mon Sep 17 00:00:00 2001
+From cc48c743c56fb490d6bc7e8d551fc3fdff929d52 Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:35 +0800
 Subject: [PATCH 17/74] dcomp: Implement IDCompositionVisual::SetContent().

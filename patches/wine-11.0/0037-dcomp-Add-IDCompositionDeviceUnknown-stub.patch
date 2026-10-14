@@ -1,4 +1,4 @@
-From c66f34c28c0cd5d8add4a3bd72b7b1aa5618eb4d Mon Sep 17 00:00:00 2001
+From db13619bae070f17f11f6c73a7bae78786e4e528 Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:35 +0800
 Subject: [PATCH 37/74] dcomp: Add IDCompositionDeviceUnknown stub.

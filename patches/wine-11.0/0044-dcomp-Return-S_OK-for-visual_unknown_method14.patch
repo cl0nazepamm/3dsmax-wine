@@ -1,4 +1,4 @@
-From e04462ce1e6952ea73e22aab7659e1315444b1bb Mon Sep 17 00:00:00 2001
+From a9ada3b467ae6a5bc7a760092d74159b59cc0891 Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:35 +0800
 Subject: [PATCH 44/74] dcomp: Return S_OK for visual_unknown_method14().

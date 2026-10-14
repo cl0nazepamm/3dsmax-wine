@@ -1,4 +1,4 @@
-From f295a18e9e1c6f85073b321ce2da47ce80588059 Mon Sep 17 00:00:00 2001
+From 61e205a392d700dfc0b4c37ee4fbb10000c41631 Mon Sep 17 00:00:00 2001
 From: Stian Low <wineryyyyy@gmail.com>
 Date: Mon, 8 Jun 2026 11:41:27 +1000
 Subject: [PATCH 69/74] dcomp: Allow IDCompositionDevice3 interface

@@ -1,4 +1,4 @@
-From 191cdfbba4f138ed6288c136af404b9b2799384f Mon Sep 17 00:00:00 2001
+From 912400cdee82e41a998d4898e52e51ad7e752998 Mon Sep 17 00:00:00 2001
 From: Zhiyi Zhang <zzhang@codeweavers.com>
 Date: Fri, 13 Mar 2026 10:13:36 +0800
 Subject: [PATCH 60/74] dcomp: Implement child visual composition.
