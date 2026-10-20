@@ -103,3 +103,94 @@ I restored my 3ds Max setup from my Windows PC over ssh, as tar streams: ENU, `%
 
 - **Exit 244 right after `ADP Initialize: OptedOut`.** This is the same exit as on day one, when I clicked OK in **Privacy Settings**. Submitting that dialog under Wine ends 3ds Max, so the answer is never stored: `ADPSDK\UserConsent\<userId>.json` keeps `optIn: null, userActionRequired: true`. Whether the dialog appears depends on ADP resolving the signed-in user ID before startup goes on, so it's racy. Some launches skipped it, which made it look like a 3dsMax.ini problem (and `[PlugInKeys] Enabled=1` looked like a suspect; it wasn't). → `scripts/set-privacy-consent.sh` records the preferences directly. Default: only the required collection, both optional boxes unchecked.
 - **`c0000409` fail-fast ~10 s after the UI appears.** The crash comes in startup script order right after `QuadColor_Startup.ms`, i.e. in `RappaTools3.mse`. Parked in `ENU\scripts\_disabled_startup\`. A lead, not verified: the restored `clone.hsx` has RappaTools3 HotBox bindings plus bindings to UVReactor actions that aren't installed, and RappaTools writes to the hotkey system on load.
+
+---
+
+## 2026-10-19: macOS (Apple Silicon) with DXMT
+
+Environment: Apple M4, 16 GB, macOS 27.0.1, Rosetta 2. Wine is Gcenx's `wine-stable-11.0_1` macOS build with the patched modules layered on top. Direct3D 11 goes through [DXMT](https://github.com/3Shain/dxmt) (D3D11 → Metal). Setup steps are in [macos/README.md](../macos/README.md).
+
+### Where it stands
+
+- **Works, the same as on Linux:** prefix, runtimes, AdskLicensing service (patch 0003), 3dsMax.msi, splash and product strings (patch 0004), Identity Manager sign-in, privacy consent, and the main UI. No new Wine patches were needed for these.
+- **Viewport:**
+  - The grid and wireframes render on the GPU.
+  - Shaded objects (sphere, teapot) are black.
+  - A box is created but not drawn, and drawing one interactively hangs the GPU, after which 3ds Max dies.
+
+### DXMT can't present into a Wine 11 window → patch 0075
+
+- **Symptom:** DXMT needs `winemac.so` to export its window internals, and stock Wine exports nothing but the unix call tables.
+- **Root cause:** DXMT's `winemetal.so` does `dlsym(RTLD_DEFAULT, "macdrv_functions")`, which is CrossOver's table. It expects `get_win_data()` to return `{hwnd, cocoa_window, cocoa_view, client_cocoa_view}`. Wine 11's `macdrv_win_data` has no client view at all; client areas are `client_surface`s now.
+- **Fix (`macos/patches/0075`):**
+  - `winemac.drv/dxmt.c` exports `macdrv_functions` in CrossOver's layout.
+  - `get_win_data()` creates a client surface for the window, exactly like the Vulkan driver's `macdrv_vulkan_surface_create`, and returns its view as `client_cocoa_view`.
+  - The surface is released together with the metal view made on it.
+
+### Nitrous falls back to software ("no GPU")
+
+- **Symptom:** `Max.log` says "We switched automatically the graphic device to Nitrous software as this machine has no GPU", and the device created is "Nitrous Software (= Direct3D 11 WARP)". 3ds Max also writes `GFXDirect3DVersion=WARP` into `3dsMax.ini`, which keeps it on that path for later launches.
+- **Root cause:** DXMT reports vendor `0x106B` with device ID 0, and Nitrous doesn't accept that adapter. DXMT can't create WARP devices either (driver type 5), so the software path is DXMT hardware plus a WARP-style feature set.
+- **Fix:**
+  - `macos/dxmt.conf` reports an AMD adapter (`1002:73bf`, "AMD Radeon RX 6800 XT").
+  - `run-3dsmax.sh` pins `GFXDirect3DVersion=11.0` before each launch.
+  - Nitrous then creates "Direct3D 11.0 Feature Level 11 - AMD Radeon RX 6800 XT".
+
+### GPU hang on the first mesh → DXMT patch 0001
+
+- **Symptom:** the Metal command buffer fails with "Caused GPU Hang Error". Every later submission is "Ignored (for causing prior/excessive GPU errors)", and the viewport freezes.
+- **Investigation:**
+  - DXMT logs `CreateEmulatedVertexStreamOutputShader: only slot 0 supported` and then `CreateGeometryShaderWithStreamOutput: not supported, expect problem`.
+  - Nitrous streams `Tangent0` to slot 0 and `Bitangent0` to slot 1 from one vertex shader.
+  - When DXMT can't emulate that, it passes the *vertex* shader's bytecode to `AddGeometryShader`. Its mesh-shader GS emulation then runs with no output topology or vertex count.
+- **Fix (`macos/patches/dxmt/0001`, on DXMT `main`):**
+  - Upstream's June refactor (b6e3fd8) already binds all four SO slots through a table. The vertex function now picks each element's slot buffer and stride.
+  - A vertex shader whose stream output still can't be emulated has its output dropped instead of being compiled as a GS.
+  - The repro (`macos/tests/drawbox.ms`) no longer hangs.
+- **Not it:** DXMT v0.80, the CI build of `main` (50102f9) and Direct3D 11.0 vs WARP all hang the same way without this patch.
+
+### What's left: geometry-shader stream output
+
+Tracing every SO declaration, draw and binding (debug patch 0002) shows how Nitrous uses stream output. It does its mesh preprocessing on the GPU and reads the results back as vertex and index data:
+
+| Shader | Kind | Stream output | Purpose |
+|---|---|---|---|
+| 8 vertex shaders | point list over the mesh's vertices | Normal; Tangent+Bitangent (2 slots); Position; Color; Position+Color (2 slots) | per-vertex data; **works now** |
+| GS `07752229` | triangle list → 3 points, always | `Normal0` xyz | flat (face) normals |
+| GS `cbb4d207` | triangle list → 3 points, always | `Texcoord0.x` | index rewrite, flips winding when `cb0[2].y` is set |
+| 6 GS (`2d6c0987`, `74f9e480`, …) | point → 0 or 1 point | 1–5 values over 1–2 slots | filters: emit only if a mask texture (`t0`, indexed by element id) is set |
+| `CreateQuery1(D3D11_QUERY_SO_STATISTICS)` | n/a | n/a | not implemented in DXMT |
+
+DXMT `main` logs `unimplemented stream output from geometry pipeline` for all of the GS passes, and their target buffers are never written.
+
+- **The box hang is probably downstream of this.** The per-vertex normal shader (`9fa80495`) walks a linked list of smoothing groups in an int buffer (`loop … breakc_nz … ieq r1.w, -1`). With the producer pass missing, that buffer can hold zeros, and the loop never terminates. Boxes go down that path because every face has its own smoothing group.
+- **Black shading is not explained yet.** That shader also reads face normals from a texture that an ordinary render pass fills. Check this again once the GS passes write real data.
+
+Ruled out:
+
+- **Class linkage.** "Class linkage not supported" appears for almost every shader, but none of the 190 dumped shaders uses interfaces (`fcall` / `dcl_interface`).
+- **SO targets left bound.** Nitrous leaves two SO buffers bound across ordinary draws, but no vertex or index buffer is ever refused for being bound to an SO slot.
+- **Wine's wined3d instead of DXMT.** Nitrous refuses it ("Could not initialize the graphic device", exit 249), even with an AMD vendor ID.
+- **D3DMetal.** Its DLLs import `ntdll.__wine_unix_call`, which Wine 11 no longer exports (only `__wine_unix_call_dispatcher`). It reportedly works only on CrossOver's Wine 9-based builds.
+- **Wine Staging.** 11.20 has nothing for this; it overlaps with our dcomp backport only.
+
+### Next steps
+
+1. **Implement GS stream output in DXMT** (`airconv/dxbc_converter_gs.cpp`, the shader variant plumbing, `encodeStreamOutputBuffers<PipelineKind::Geometry>`). All eight shaders have point-list output and a single stream, so no strip decomposition or multi-stream support is needed.
+   - **Ordered placement** for fixed-count shaders: write vertex `k` of input primitive `p` at `p * maxout + k`, which keeps D3D's order exactly.
+   - **Atomic append** for the filters, with a counter per SO binding.
+   - **No mesh output** when there is no rasterized stream.
+   - **Output signature:** read the GS output signature (`OSG5`), which `ExtractMTLStreamOutputElements` can't parse today.
+   - **Size:** about 400–500 lines.
+2. **`SO_STATISTICS` query** from the same counters, if Nitrous actually reads it.
+3. **Retest:** the box, the black shading and the smoothing-group loop.
+4. **Comparison:** a CrossOver trial with D3DMetal would show whether the Mac can run Nitrous well at all.
+
+Debugging aids:
+
+- **Shader dumps and disassembly:** `DXMT_SO_DUMP` (debug patch) and `tools/dxbcdis.c`, a disassembler on Wine's vkd3d-shader.
+- **Repros:** `macos/tests/*.ms`.
+- **Local results (gitignored):**
+  - `logs/so1/`: first run without the hang.
+  - `logs/trace2/`: binding traces.
+  - `logs/cl1/asm/`: disassembly of every dumped shader. These are Autodesk's shaders, so they stay out of the repo.

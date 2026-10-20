@@ -1,0 +1,269 @@
+From e21977c357046fdfde0331a000ecfc54e05bee54 Mon Sep 17 00:00:00 2001
+From: 3dsmax-wine <3dsmax-wine@localhost>
+Date: Mon, 19 Oct 2026 17:23:11 +0300
+Subject: [PATCH 2/2] DEBUG: Trace stream output use (3ds Max investigation).
+
+Logs every CreateGeometryShaderWithStreamOutput declaration, draws made while SO
+targets are bound, DrawAuto, SOSetTargets, refused input bindings, ClearState and
+ExecuteCommandList. DXMT_SO_DUMP=<dir> writes SO shaders and shaders created with a
+class linkage as .dxbc files. Not meant for upstream.
+---
+ src/d3d11/d3d11_context_def.cpp  |  1 +
+ src/d3d11/d3d11_context_imm.cpp  |  1 +
+ src/d3d11/d3d11_context_impl.cpp | 38 ++++++++++++++++++++++++--
+ src/d3d11/d3d11_device.cpp       | 47 ++++++++++++++++++++++++++++++++
+ 4 files changed, 85 insertions(+), 2 deletions(-)
+
+diff --git a/src/d3d11/d3d11_context_def.cpp b/src/d3d11/d3d11_context_def.cpp
+index 9e9b816..485c841 100644
+--- a/src/d3d11/d3d11_context_def.cpp
++++ b/src/d3d11/d3d11_context_def.cpp
+@@ -397,6 +397,7 @@ public:
+   void
+   STDMETHODCALLTYPE
+   ExecuteCommandList(ID3D11CommandList *pCommandList, BOOL RestoreContextState) override{
++    WARN("SO trace: ExecuteCommandList (def) restore ", RestoreContextState);
+     UNIMPLEMENTED("ExecuteCommandList on deferred context");
+   }
+ 
+diff --git a/src/d3d11/d3d11_context_imm.cpp b/src/d3d11/d3d11_context_imm.cpp
+index 4862ce7..00a0bc8 100644
+--- a/src/d3d11/d3d11_context_imm.cpp
++++ b/src/d3d11/d3d11_context_imm.cpp
+@@ -515,6 +515,7 @@ public:
+   void
+   STDMETHODCALLTYPE
+   ExecuteCommandList(ID3D11CommandList *pCommandList, BOOL RestoreContextState) override {
++    WARN("SO trace: ExecuteCommandList (imm) restore ", RestoreContextState);
+     std::lock_guard<d3d11_device_mutex> lock(mutex);
+ 
+     ResetEncodingContextState();
+diff --git a/src/d3d11/d3d11_context_impl.cpp b/src/d3d11/d3d11_context_impl.cpp
+index c3db7c2..7116eda 100644
+--- a/src/d3d11/d3d11_context_impl.cpp
++++ b/src/d3d11/d3d11_context_impl.cpp
+@@ -1290,12 +1290,29 @@ public:
+ 
+ #pragma region DrawCall
+ 
++  // debugging aid for stream output (3ds Max Nitrous): log draws made while SO targets are bound, and DrawAuto
++  void TraceStreamOutputDraw(const char *kind, UINT count, UINT instances) {
++    static std::atomic<unsigned> traced = 0;
++    unsigned mask = 0;
++    for (unsigned i = 0; i < 4; i++)
++      mask |= state_.StreamOutput.Targets.test_bound(i) ? 1u << i : 0;
++    if (!mask && strcmp(kind, "DrawAuto"))
++      return;
++    if (traced++ >= 400)
++      return;
++    auto gs = state_.ShaderStages[PipelineStage::Geometry].Shader.ptr();
++    const char *gs_kind = !gs ? "none" : com_cast<IMTLD3D11StreamOutputLayout>(gs) ? "vs-so" : "gs";
++    WARN("SO trace: ", kind, " count ", count, " instances ", instances, " topology ",
++         (unsigned)state_.InputAssembler.Topology, " gs ", gs_kind, " so-slots 0x", std::hex, mask);
++  }
++
+   void
+   STDMETHODCALLTYPE
+   Draw(UINT VertexCount, UINT StartVertexLocation) override {
+     if (unlikely(!VertexCount))
+       return;
+     std::lock_guard<mutex_t> lock(mutex);
++    TraceStreamOutputDraw("Draw", VertexCount, 1);
+ 
+     WMTPrimitiveType Primitive;
+     uint32_t ControlPointCount;
+@@ -1329,6 +1346,7 @@ public:
+     if (unlikely(!IndexCount))
+       return;
+     std::lock_guard<mutex_t> lock(mutex);
++    TraceStreamOutputDraw("DrawIndexed", IndexCount, 1);
+ 
+     WMTPrimitiveType Primitive;
+     uint32_t ControlPointCount;
+@@ -1372,6 +1390,7 @@ public:
+     if (unlikely(!VertexCountPerInstance || !InstanceCount))
+       return;
+     std::lock_guard<mutex_t> lock(mutex);
++    TraceStreamOutputDraw("DrawInstanced", VertexCountPerInstance, InstanceCount);
+ 
+     WMTPrimitiveType Primitive;
+     uint32_t ControlPointCount;
+@@ -1411,6 +1430,7 @@ public:
+     if (unlikely(!IndexCountPerInstance || !InstanceCount))
+       return;
+     std::lock_guard<mutex_t> lock(mutex);
++    TraceStreamOutputDraw("DrawIndexedInstanced", IndexCountPerInstance, InstanceCount);
+ 
+     WMTPrimitiveType Primitive;
+     uint32_t ControlPointCount;
+@@ -1831,6 +1851,7 @@ public:
+   STDMETHODCALLTYPE
+   DrawAuto() override {
+     std::lock_guard<mutex_t> lock(mutex);
++    TraceStreamOutputDraw("DrawAuto", 0, 1);
+ 
+     EmitST([](ArgumentEncodingContext &enc) { enc.setCompatibilityFlag(FeatureCompatibility::UnsupportedDrawAuto); });
+   }
+@@ -1913,6 +1934,7 @@ public:
+   void
+   STDMETHODCALLTYPE
+   ClearState() override {
++    WARN("SO trace: ClearState");
+     std::lock_guard<mutex_t> lock(mutex);
+ 
+     ResetEncodingContextState();
+@@ -2259,8 +2281,16 @@ public:
+   SOSetTargets(UINT NumBuffers, ID3D11Buffer *const *ppSOTargets, const UINT *pOffsets) override {
+     std::lock_guard<mutex_t> lock(mutex);
+ 
+-    if (!ValidateMultiSOTargets(NumBuffers, ppSOTargets))
++    {
++      static std::atomic<unsigned> traced = 0;
++      if (traced++ < 200)
++        WARN("SO trace: SOSetTargets(", NumBuffers, ") ", NumBuffers > 0 ? (void *)ppSOTargets[0] : nullptr, " ",
++             NumBuffers > 1 ? (void *)ppSOTargets[1] : nullptr);
++    }
++    if (!ValidateMultiSOTargets(NumBuffers, ppSOTargets)) {
++      WARN("SO trace: SOSetTargets rejected (same buffer bound twice)");
+       return;
++    }
+ 
+     for (unsigned slot = 0; slot < D3D11_SO_BUFFER_SLOT_COUNT; slot++) {
+       auto pBuffer = slot < NumBuffers ? GetResourceCommon(ppSOTargets[slot]) : nullptr;
+@@ -3721,8 +3751,12 @@ public:
+       // SO
+       for (unsigned Slot = 0; Slot < 4; Slot++) {
+         if (state_.StreamOutput.Targets.test_bound(Slot) &&
+-            CheckOverlap(state_.StreamOutput.Targets[Slot].Buffer.ptr(), pBuffer))
++            CheckOverlap(state_.StreamOutput.Targets[Slot].Buffer.ptr(), pBuffer)) {
++          static std::atomic<unsigned> traced = 0;
++          if (traced++ < 50)
++            WARN("SO trace: input binding refused, buffer ", (void *)pBuffer, " is bound to SO slot ", Slot);
+           return false;
++        }
+       }
+     }
+ 
+diff --git a/src/d3d11/d3d11_device.cpp b/src/d3d11/d3d11_device.cpp
+index a5d8362..c0ce311 100644
+--- a/src/d3d11/d3d11_device.cpp
++++ b/src/d3d11/d3d11_device.cpp
+@@ -1,3 +1,5 @@
++#include <fstream>
++#include "util_env.hpp"
+ #include "com/com_guid.hpp"
+ #include "d3d11_fence.hpp"
+ #include "d3d11_input_layout.hpp"
+@@ -240,7 +242,10 @@ public:
+                      ID3D11VertexShader **ppVertexShader) override {
+     InitReturnPtr(ppVertexShader);
+     if (pClassLinkage != nullptr)
++      {
+       WARN("Class linkage not supported");
++      DumpShader("cl", pShaderBytecode, BytecodeLength);
++    }
+ 
+     return pipeline_cache_->AddVertexShader(pShaderBytecode, BytecodeLength,
+                                             ppVertexShader);
+@@ -252,7 +257,10 @@ public:
+                        ID3D11GeometryShader **ppGeometryShader) override {
+     InitReturnPtr(ppGeometryShader);
+     if (pClassLinkage != nullptr)
++      {
+       WARN("Class linkage not supported");
++      DumpShader("cl", pShaderBytecode, BytecodeLength);
++    }
+ 
+     if (!ppGeometryShader)
+       return S_FALSE;
+@@ -269,9 +277,23 @@ public:
+       ID3D11GeometryShader **ppGeometryShader) override {
+     InitReturnPtr(ppGeometryShader);
+     if (pClassLinkage != nullptr)
++      {
+       WARN("Class linkage not supported");
++      DumpShader("cl", pShaderBytecode, BytecodeLength);
++    }
+ 
+     uint32_t program_type = DXBCProgramType(pShaderBytecode, BytecodeLength);
++    WARN("CreateGeometryShaderWithStreamOutput: ", program_type == 1 ? "vertex" : program_type == 2 ? "geometry" : "other",
++         " shader (type ", program_type, "), ", NumEntries, " entries, ", NumStrides, " strides, rasterized stream ",
++         RasterizedStream);
++    DumpShader(program_type == 1 ? "so-vs" : "so-gs", pShaderBytecode, BytecodeLength);
++    for (unsigned i = 0; i < NumStrides; i++)
++      WARN("  stride[", i, "] = ", pBufferStrides[i]);
++    for (unsigned i = 0; i < NumEntries; i++) {
++      auto &e = pSODeclaration[i];
++      WARN("  entry ", i, ": stream ", e.Stream, " ", e.SemanticName ? e.SemanticName : "<hole>", e.SemanticIndex,
++           " components ", (unsigned)e.StartComponent, "+", (unsigned)e.ComponentCount, " slot ", (unsigned)e.OutputSlot);
++    }
+ 
+     if (NumEntries > 0 && RasterizedStream == D3D11_SO_NO_RASTERIZED_STREAM &&
+         ((char *)pShaderBytecode)[0] == 'D' &&
+@@ -302,6 +324,19 @@ public:
+                                               ppGeometryShader);
+   }
+ 
++  // debugging aid: DXMT_SO_DUMP=<dir> writes shader bytecode as <dir>/<prefix>-<fnv32>.dxbc
++  static void DumpShader(const char *prefix, const void *pBytecode, SIZE_T Length) {
++    auto dump_dir = env::getEnvVar("DXMT_SO_DUMP");
++    if (dump_dir.empty())
++      return;
++    uint32_t hash = 2166136261u;
++    for (SIZE_T i = 0; i < Length; i++)
++      hash = (hash ^ ((const uint8_t *)pBytecode)[i]) * 16777619u;
++    char name[64];
++    snprintf(name, sizeof(name), "/%s-%08x.dxbc", prefix, hash);
++    std::ofstream(dump_dir + name, std::ios::binary).write((const char *)pBytecode, Length);
++  }
++
+   // D3D10_SB_TOKENIZED_PROGRAM_TYPE of a DXBC container (0 pixel, 1 vertex, 2 geometry, ...), ~0u if unknown
+   static uint32_t DXBCProgramType(const void *pBytecode, SIZE_T Length) {
+     auto bytes = (const uint8_t *)pBytecode;
+@@ -329,7 +364,10 @@ public:
+                     ID3D11PixelShader **ppPixelShader) override {
+     InitReturnPtr(ppPixelShader);
+     if (pClassLinkage != nullptr)
++      {
+       WARN("Class linkage not supported");
++      DumpShader("cl", pShaderBytecode, BytecodeLength);
++    }
+ 
+     return pipeline_cache_->AddPixelShader(pShaderBytecode, BytecodeLength,
+                                            ppPixelShader);
+@@ -341,7 +379,10 @@ public:
+                    ID3D11HullShader **ppHullShader) override {
+     InitReturnPtr(ppHullShader);
+     if (pClassLinkage != nullptr)
++      {
+       WARN("Class linkage not supported");
++      DumpShader("cl", pShaderBytecode, BytecodeLength);
++    }
+ 
+     if (!ppHullShader)
+       return S_FALSE;
+@@ -356,7 +397,10 @@ public:
+                      ID3D11DomainShader **ppDomainShader) override {
+     InitReturnPtr(ppDomainShader);
+     if (pClassLinkage != nullptr)
++      {
+       WARN("Class linkage not supported");
++      DumpShader("cl", pShaderBytecode, BytecodeLength);
++    }
+ 
+     if (!ppDomainShader)
+       return S_FALSE;
+@@ -371,7 +415,10 @@ public:
+                       ID3D11ComputeShader **ppComputeShader) override {
+     InitReturnPtr(ppComputeShader);
+     if (pClassLinkage != nullptr)
++      {
+       WARN("Class linkage not supported");
++      DumpShader("cl", pShaderBytecode, BytecodeLength);
++    }
+ 
+     return pipeline_cache_->AddComputeShader(pShaderBytecode, BytecodeLength,
+                                              ppComputeShader);
+-- 
+2.54.0 (Apple Git-157)
+

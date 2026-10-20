@@ -1,0 +1,131 @@
+From 60b8653b10fc1a3547f8880e7e74c70bc92ed999 Mon Sep 17 00:00:00 2001
+From: 3dsmax-wine <3dsmax-wine@localhost>
+Date: Mon, 19 Oct 2026 17:22:56 +0300
+Subject: [PATCH 1/2] d3d11: Emulate vertex stream output to all four SO slots.
+
+Nitrous (3ds Max 2027) streams tangents and bitangents from one vertex shader into
+slots 0 and 1. The SO buffer table already binds every slot; let the vertex function
+pick each element's slot buffer and stride instead of assuming slot 0.
+
+A vertex shader whose stream output still can't be emulated used to be compiled as a
+geometry shader; without an output topology or vertex count that hangs the GPU. Drop
+its output instead.
+---
+ src/airconv/dxbc_converter.cpp   | 17 ++++++++++++-----
+ src/d3d11/d3d11_device.cpp       | 32 ++++++++++++++++++++++++++++++++
+ src/d3d11/d3d11_input_layout.cpp |  5 -----
+ 3 files changed, 44 insertions(+), 10 deletions(-)
+
+diff --git a/src/airconv/dxbc_converter.cpp b/src/airconv/dxbc_converter.cpp
+index b0704ac..83bf083 100644
+--- a/src/airconv/dxbc_converter.cpp
++++ b/src/airconv/dxbc_converter.cpp
+@@ -658,9 +658,16 @@ llvm::Error convert_dxbc_vertex_shader(
+       auto so_entries = builder.CreateBitCast(
+           ctx.function->getArg(so_table), so_entries_type->getPointerTo((uint32_t)air::AddressSpace::constant)
+       );
+-      auto slot0_entry =
+-          builder.CreateLoad(so_entries_type, builder.CreateConstInBoundsGEP1_32(so_entries_type, so_entries, 0));
+-      auto slot0 = builder.CreateExtractValue(slot0_entry, {0});
++      // one buffer pointer per SO slot, loaded on first use
++      llvm::Value *slot_buffers[4] = {};
++      auto slot_buffer = [&](unsigned slot) {
++        if (!slot_buffers[slot]) {
++          auto entry =
++              builder.CreateLoad(so_entries_type, builder.CreateConstInBoundsGEP1_32(so_entries_type, so_entries, slot));
++          slot_buffers[slot] = builder.CreateExtractValue(entry, {0});
++        }
++        return slot_buffers[slot];
++      };
+       auto adjusted_vertex_id = builder.CreateSub(vertex_id, base_vertex);
+       auto output_regs = builder.CreateBitOrPointerCast(
+         ctx.resource.output.ptr_int4, llvm::PointerType::get(ctx.types._int, 0)
+@@ -676,12 +683,12 @@ llvm::Error convert_dxbc_vertex_shader(
+         auto target_offset = ctx.builder.CreateAdd(
+           ctx.builder.CreateMul(
+             adjusted_vertex_id,
+-            ctx.builder.getInt32(vertex_so->strides[element.output_slot /* expected to be 0 */])
++            ctx.builder.getInt32(vertex_so->strides[element.output_slot])
+           ),
+           ctx.builder.getInt32(element.offset)
+         );
+         auto target_ptr = ctx.builder.CreateGEP(
+-          ctx.types._int, slot0, {ctx.builder.CreateLShr(target_offset, 2)}
++          ctx.types._int, slot_buffer(element.output_slot), {ctx.builder.CreateLShr(target_offset, 2)}
+         );
+         ctx.builder.CreateStore(
+           ctx.builder.CreateLoad(ctx.types._int, ptr), target_ptr, true
+diff --git a/src/d3d11/d3d11_device.cpp b/src/d3d11/d3d11_device.cpp
+index 62efc67..a5d8362 100644
+--- a/src/d3d11/d3d11_device.cpp
++++ b/src/d3d11/d3d11_device.cpp
+@@ -271,6 +271,8 @@ public:
+     if (pClassLinkage != nullptr)
+       WARN("Class linkage not supported");
+ 
++    uint32_t program_type = DXBCProgramType(pShaderBytecode, BytecodeLength);
++
+     if (NumEntries > 0 && RasterizedStream == D3D11_SO_NO_RASTERIZED_STREAM &&
+         ((char *)pShaderBytecode)[0] == 'D' &&
+         ((char *)pShaderBytecode)[1] == 'X' &&
+@@ -286,11 +288,41 @@ public:
+       if (SUCCEEDED(hr))
+         return so_layout->QueryInterface(IID_PPV_ARGS(ppGeometryShader));
+     }
++    if (program_type == 1) {
++      // a vertex shader compiled as a geometry shader has no output topology or vertex count, and the
++      // emulated GS stage runs away with it (GPU hang): keep the pass, but write and rasterize nothing
++      ERR("CreateGeometryShaderWithStreamOutput: can't emulate this vertex stream output, dropping it");
++      Com<IMTLD3D11StreamOutputLayout> so_layout;
++      if (SUCCEEDED(pipeline_cache_->AddStreamOutputLayout(pShaderBytecode, 0, nullptr, 0, nullptr,
++                                                           D3D11_SO_NO_RASTERIZED_STREAM, &so_layout)))
++        return so_layout->QueryInterface(IID_PPV_ARGS(ppGeometryShader));
++    }
+     ERR("CreateGeometryShaderWithStreamOutput: not supported, expect problem");
+     return pipeline_cache_->AddGeometryShader(pShaderBytecode, BytecodeLength,
+                                               ppGeometryShader);
+   }
+ 
++  // D3D10_SB_TOKENIZED_PROGRAM_TYPE of a DXBC container (0 pixel, 1 vertex, 2 geometry, ...), ~0u if unknown
++  static uint32_t DXBCProgramType(const void *pBytecode, SIZE_T Length) {
++    auto bytes = (const uint8_t *)pBytecode;
++    if (Length < 32 || memcmp(bytes, "DXBC", 4))
++      return ~0u;
++    uint32_t chunk_count;
++    memcpy(&chunk_count, bytes + 28, 4);
++    for (uint32_t i = 0; i < chunk_count && 32 + i * 4 + 4 <= Length; i++) {
++      uint32_t offset;
++      memcpy(&offset, bytes + 32 + i * 4, 4);
++      if (offset + 12 > Length)
++        break;
++      if (memcmp(bytes + offset, "SHDR", 4) && memcmp(bytes + offset, "SHEX", 4))
++        continue;
++      uint32_t version;
++      memcpy(&version, bytes + offset + 8, 4);
++      return version >> 16;
++    }
++    return ~0u;
++  }
++
+   HRESULT STDMETHODCALLTYPE
+   CreatePixelShader(const void *pShaderBytecode, SIZE_T BytecodeLength,
+                     ID3D11ClassLinkage *pClassLinkage,
+diff --git a/src/d3d11/d3d11_input_layout.cpp b/src/d3d11/d3d11_input_layout.cpp
+index 8c03b2b..8ddd927 100644
+--- a/src/d3d11/d3d11_input_layout.cpp
++++ b/src/d3d11/d3d11_input_layout.cpp
+@@ -201,11 +201,6 @@ HRESULT ExtractMTLStreamOutputElements(
+           entry.OutputSlot);
+       return E_INVALIDARG;
+     }
+-    // FIXME: support more than 1 output slot
+-    if (entry.OutputSlot != 0) {
+-      ERR("CreateEmulatedVertexStreamOutputShader: only slot 0 supported");
+-      return E_INVALIDARG;
+-    }
+     if ((entry.ComponentCount - entry.StartComponent) < 0 ||
+         (entry.ComponentCount + entry.StartComponent) > 4) {
+       ERR("CreateEmulatedVertexStreamOutputShader: invalid components");
+-- 
+2.54.0 (Apple Git-157)
+
